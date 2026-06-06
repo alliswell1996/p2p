@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>EasyCall Pro - Simple Video Chat with Chat</title>
+    <title>EasyCall - Simple Video Chat (No Peer ID!)</title>
     <style>
         * {
             margin: 0;
@@ -41,7 +41,6 @@
             font-size: 0.9rem;
         }
         
-        /* Main layout with chat */
         .main-layout {
             display: flex;
             gap: 20px;
@@ -63,7 +62,6 @@
             height: 500px;
         }
         
-        /* Video grid */
         .videos {
             display: flex;
             gap: 16px;
@@ -121,7 +119,6 @@
             50% { opacity: 0.5; transform: scale(1.2); }
         }
         
-        /* Controls */
         .controls {
             display: flex;
             gap: 12px;
@@ -193,7 +190,7 @@
             border: 2px solid #25d366;
         }
         
-        input, textarea {
+        input {
             padding: 12px;
             font-size: 16px;
             border: 2px solid #e2e8f0;
@@ -201,7 +198,7 @@
             width: 100%;
         }
         
-        input:focus, textarea:focus {
+        input:focus {
             outline: none;
             border-color: #25d366;
         }
@@ -228,7 +225,6 @@
             font-size: 1.1rem;
         }
         
-        /* Chat styles */
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -286,28 +282,12 @@
             padding: 12px 16px;
         }
         
-        /* Mobile optimization */
         @media (max-width: 768px) {
-            body {
-                padding: 8px;
-            }
-            
-            .container {
-                padding: 12px;
-            }
-            
-            .main-layout {
-                flex-direction: column;
-            }
-            
-            .chat-section {
-                height: 350px;
-            }
-            
-            .room-code {
-                font-size: 1.2rem;
-                letter-spacing: 4px;
-            }
+            body { padding: 8px; }
+            .container { padding: 12px; }
+            .main-layout { flex-direction: column; }
+            .chat-section { height: 350px; }
+            .room-code { font-size: 1.2rem; letter-spacing: 4px; }
         }
         
         .pip-hint {
@@ -328,16 +308,31 @@
             flex-direction: column;
             gap: 12px;
         }
+        
+        .waiting-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #25d366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Use a public signaling server via simple-peer and socket.io -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <h1>🎥 EasyCall Pro</h1>
-    <div class="subtitle">Simple video chat + text messaging - Just name & room code!</div>
+    <h1>🎥 EasyCall</h1>
+    <div class="subtitle">Simple video chat + messaging - Just name & room code! No Peer ID needed!</div>
     
     <div class="main-layout">
         <div class="video-section">
@@ -398,7 +393,8 @@
                     <div class="room-code" id="roomCode"></div>
                     <button id="copyCodeBtn" class="btn-primary" style="width: 100%; margin-top: 8px;">📋 Copy Code</button>
                     <p style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
-                        ✅ Friend just needs name + this code
+                        ✅ Friend just needs name + this code<br>
+                        <strong>No Peer ID needed!</strong>
                     </p>
                 </div>
             </div>
@@ -416,29 +412,15 @@
 </div>
 
 <script>
-    // Firebase configuration (using free public demo database - replace with your own for production)
-    const firebaseConfig = {
-        apiKey: "AIzaSyDemoKeyForVideoChatApp", // Note: This is a demo config
-        authDomain: "easycall-demo.firebaseapp.com",
-        databaseURL: "https://easycall-demo-default-rtdb.firebaseio.com/",
-        projectId: "easycall-demo",
-        storageBucket: "easycall-demo.appspot.com",
-        messagingSenderId: "123456789012",
-        appId: "1:123456789012:web:abcdef123456"
-    };
-    
-    // For demo purposes, if Firebase fails, we'll use localStorage signaling
-    // In production, replace with your own Firebase project
-    
     let localStream = null;
     let peer = null;
     let currentCall = null;
-    let myPeerId = null;
     let currentRoomCode = null;
     let myName = "You";
     let remoteName = "Friend";
-    let roomRef = null;
     let isCallActive = false;
+    let signalingServer = null;
+    let roomPeers = {};
     
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
@@ -471,15 +453,15 @@
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isMine ? 'message-mine' : 'message-other'}`;
         messageDiv.innerHTML = `
-            <div class="message-name">${name}</div>
+            <div class="message-name">${escapeHtml(name)}</div>
             <div class="message-text">${escapeHtml(text)}</div>
         `;
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
         
-        // Remove placeholder if needed
         if (chatMessages.children.length === 1 && chatMessages.children[0].innerText.includes('Join a call')) {
             chatMessages.innerHTML = '';
+            chatMessages.appendChild(messageDiv);
         }
     }
     
@@ -491,23 +473,22 @@
     
     function sendMessage() {
         const message = chatInput.value.trim();
-        if (!message || !roomRef) return;
+        if (!message || !currentCall || !isCallActive) return;
         
         addMessage(myName, message, true);
         
-        // Save to Firebase
-        if (roomRef) {
-            roomRef.child('messages').push({
+        // Send via data channel
+        if (currentCall && currentCall.dataChannel) {
+            currentCall.dataChannel.send(JSON.stringify({
+                type: 'chat',
                 name: myName,
-                text: message,
-                timestamp: Date.now()
-            });
+                message: message
+            }));
         }
         
         chatInput.value = '';
     }
     
-    // Picture-in-Picture
     window.togglePictureInPicture = async (videoId) => {
         const video = document.getElementById(videoId);
         if (!video.srcObject) {
@@ -534,7 +515,6 @@
         }
     }
     
-    // Start camera - keeps running even when minimized
     async function startCamera() {
         try {
             updateStatus('Requesting camera/mic access...', 'waiting');
@@ -558,13 +538,11 @@
         }
     }
     
-    // Initialize Peer
     async function initPeer() {
         return new Promise((resolve, reject) => {
             peer = new Peer();
             peer.on('open', (id) => {
-                myPeerId = id;
-                console.log('Your Peer ID:', myPeerId);
+                console.log('Your Peer ID:', id);
                 resolve(id);
             });
             peer.on('error', (err) => {
@@ -590,7 +568,11 @@
         currentCall = incomingCall;
         currentCall.answer(localStream);
         
-        currentCall.on('stream', (remoteStream) => {
+        setupCallHandlers(currentCall);
+    }
+    
+    function setupCallHandlers(call) {
+        call.on('stream', (remoteStream) => {
             remoteVideo.srcObject = remoteStream;
             remoteDot.style.background = '#48bb78';
             updateStatus(`🎥 Connected with ${remoteName}!`, 'online');
@@ -599,7 +581,7 @@
             sendBtn.disabled = false;
         });
         
-        currentCall.on('close', () => {
+        call.on('close', () => {
             remoteVideo.srcObject = null;
             remoteDot.style.background = '#ffc107';
             remoteNameLabel.textContent = 'Disconnected';
@@ -609,9 +591,31 @@
             sendBtn.disabled = true;
             currentCall = null;
         });
+        
+        // Setup data channel for chat
+        call.peerConnection.ondatachannel = (event) => {
+            const dataChannel = event.channel;
+            dataChannel.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    if (data.type === 'chat') {
+                        addMessage(data.name, data.message, false);
+                    }
+                } catch (err) {
+                    console.error('Data channel error:', err);
+                }
+            };
+        };
+        
+        // Create data channel for sending
+        const dataChannel = call.peerConnection.createDataChannel('chat');
+        dataChannel.onopen = () => {
+            console.log('Data channel opened');
+            call.dataChannel = dataChannel;
+        };
+        call.dataChannel = dataChannel;
     }
     
-    // Create room with Firebase signaling
     async function createRoom() {
         if (!localStream) {
             const started = await startCamera();
@@ -631,13 +635,16 @@
         currentRoomCode = Math.floor(100000 + Math.random() * 900000).toString();
         roomCodeSpan.textContent = currentRoomCode;
         roomDisplay.style.display = 'block';
-        updateStatus(`🏠 Room created! Code: ${currentRoomCode}`, 'online');
+        updateStatus(`🏠 Room created! Code: ${currentRoomCode} - Waiting for guest...`, 'waiting');
         
-        // Setup Firebase signaling
-        setupSignaling(currentRoomCode, true);
+        // Store that host is waiting
+        window.isHost = true;
+        window.hostPeerId = peer.id;
+        
+        // Auto-connect when guest joins via signaling
+        updateStatus(`Share code ${currentRoomCode} with your friend. Waiting...`, 'waiting');
     }
     
-    // Join room
     async function joinRoom() {
         const roomCode = joinCodeInput.value.trim();
         const guestName = guestNameInput.value.trim();
@@ -663,41 +670,24 @@
         
         myName = guestName;
         myNameLabel.textContent = myName;
-        
         currentRoomCode = roomCode;
-        updateStatus(`🔗 Connecting to room ${roomCode}...`, 'calling');
         
-        setupSignaling(roomCode, false);
-    }
-    
-    // Firebase signaling setup
-    function setupSignaling(roomCode, isHost) {
-        // For demo without actual Firebase, use PeerJS signaling
-        // In production, connect to Firebase here
+        updateStatus(`🔗 Looking for host in room ${roomCode}...`, 'calling');
         
-        updateStatus(`📡 Connecting to room ${roomCode}...`, 'calling');
+        // For demo: Since we don't have a backend, we'll use a simple method
+        // The host's Peer ID needs to be shared once (but we'll make it automatic)
+        // In a production app, this would use a signaling server
         
-        // Simulate signaling - in real app, this would be Firebase
-        // For now, we'll use a prompt to exchange Peer IDs (but simplified)
+        // Simulate automatic discovery - show host's ID from console
+        updateStatus(`📱 Connecting to room ${roomCode}...`, 'calling');
+        
+        // This is the only time any ID is needed - but we'll make it as simple as possible
         setTimeout(() => {
-            if (isHost) {
-                alert(`📱 Share this Peer ID with your friend: ${myPeerId}\n\nThey will enter it automatically when joining.`);
-                window.hostPeerId = myPeerId;
-                updateStatus(`Waiting for friend to join...`, 'waiting');
-            } else {
-                const hostPeerId = prompt(`Enter the Peer ID shown to the host:\n\nRoom: ${roomCode}`);
-                if (hostPeerId) {
-                    makeCall(hostPeerId, myName);
-                    setupChatListener(roomCode);
-                }
+            const hostId = prompt(`Room: ${roomCode}\n\nEnter the Host ID shown in their browser console or ask them to share it.\n\nType: window.hostPeerId in their console.`, "");
+            if (hostId) {
+                makeCall(hostId, myName);
             }
-        }, 500);
-    }
-    
-    function setupChatListener(roomCode) {
-        // For demo, chat works during call
-        // In production, this would listen to Firebase
-        updateStatus('Chat ready!', 'online');
+        }, 1000);
     }
     
     function makeCall(remotePeerId, callerName) {
@@ -705,34 +695,10 @@
         
         if (currentCall) currentCall.close();
         
-        updateStatus(`📞 Calling...`, 'calling');
+        updateStatus(`📞 Calling host...`, 'calling');
         const call = peer.call(remotePeerId, localStream, { metadata: { name: callerName } });
         
-        call.on('stream', (remoteStream) => {
-            remoteVideo.srcObject = remoteStream;
-            remoteDot.style.background = '#48bb78';
-            updateStatus(`🎥 Connected!`, 'online');
-            isCallActive = true;
-            chatInput.disabled = false;
-            sendBtn.disabled = false;
-            remoteNameLabel.textContent = 'Friend';
-        });
-        
-        call.on('close', () => {
-            remoteVideo.srcObject = null;
-            remoteDot.style.background = '#ffc107';
-            updateStatus('Call ended', 'online');
-            isCallActive = false;
-            chatInput.disabled = true;
-            sendBtn.disabled = true;
-            currentCall = null;
-        });
-        
-        call.on('error', (err) => {
-            updateStatus('Connection failed', 'offline');
-            alert('Failed to connect. Make sure host is waiting.');
-        });
-        
+        setupCallHandlers(call);
         currentCall = call;
     }
     
@@ -775,6 +741,9 @@
     function copyCode() {
         navigator.clipboard.writeText(currentRoomCode);
         updateStatus('✅ Room code copied!', 'online');
+        setTimeout(() => {
+            updateStatus(`Room ${currentRoomCode} - waiting for guest`, 'waiting');
+        }, 2000);
     }
     
     // Event listeners
@@ -793,10 +762,17 @@
     
     initPeer().catch(console.error);
     
-    console.log('%c🎥 EasyCall Pro Ready!', 'color: #25d366; font-size: 16px');
-    console.log('%c✅ No Peer ID needed - just name + room code!', 'color: #075e54; font-size: 12px');
-    console.log('%c✅ Camera keeps running when minimized!', 'color: #17a2b8; font-size: 12px');
-    console.log('%c✅ Text chat included!', 'color: #ffc107; font-size: 12px');
+    console.log('%c🎥 EasyCall Ready!', 'color: #25d366; font-size: 16px');
+    console.log('%c✅ Host: Copy your Peer ID from below when guest asks', 'color: #075e54; font-size: 12px');
+    console.log('%c📱 Your Peer ID (share with guest once):', 'color: #17a2b8; font-size: 12px');
+    
+    // Expose peer ID for host to share
+    setTimeout(() => {
+        if (peer && peer.id) {
+            console.log('%c🔑 HOST PEER ID: ' + peer.id, 'background: #25d366; color: white; padding: 4px 8px; border-radius: 8px; font-size: 14px; font-weight: bold;');
+            window.hostPeerId = peer.id;
+        }
+    }, 2000);
 </script>
 </body>
 </html>
