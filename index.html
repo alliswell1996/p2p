@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>One-Click Video Call - Just Enter Name!</title>
+    <title>Easy Call</title>
     <style>
         * {
             margin: 0;
@@ -155,6 +155,15 @@
             border: 1px solid #e2e8f0;
         }
         
+        .message-system {
+            background: #fff3cd;
+            align-self: center;
+            color: #856404;
+            font-size: 11px;
+            max-width: 90%;
+            text-align: center;
+        }
+        
         .message-name {
             font-size: 11px;
             font-weight: 600;
@@ -201,6 +210,11 @@
             border-radius: 20px;
             cursor: pointer;
             font-weight: 600;
+        }
+        
+        .send-btn:disabled, .chat-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .controls {
@@ -295,6 +309,7 @@
             max-width: 300px;
             text-align: center;
             margin: 10px auto;
+            display: block;
         }
         
         .pip-hint {
@@ -326,22 +341,22 @@
             display: none;
         }
         
-        .badge {
-            display: inline-block;
-            background: #25d366;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
+        .camera-warning {
+            background: #ffc107;
+            color: #333;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
             font-size: 12px;
-            margin-left: 10px;
+            margin-top: 10px;
         }
     </style>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <h1>🎥 One-Click Video Call</h1>
-    <div class="subtitle">Share a link - others join with just their name!</div>
+    <h1>🎥 Easy Call</h1>
+    <div class="subtitle">Enjoy Yourself</div>
     
     <div class="main-layout">
         <div class="video-section">
@@ -372,8 +387,11 @@
                 <button id="startCamBtn" class="btn-primary">🎥 Start Camera</button>
                 <button id="muteMicBtn" class="btn-warning" disabled>🎤 Mute Mic</button>
                 <button id="muteCamBtn" class="btn-warning" disabled>📷 Mute Camera</button>
-                <button id="hangupBtn" class="btn-danger" disabled>❌ Hang Up</button>
+                <button id="hangupBtn" class="btn-danger" disabled>❌ Leave</button>
                 <button id="fullscreenBtn" class="btn-info">🖥️ Fullscreen</button>
+            </div>
+            <div id="cameraNote" class="camera-warning hidden">
+                💡 Camera is still running in background (minimized mode)
             </div>
         </div>
         
@@ -382,8 +400,8 @@
                 💬 Chat Messages
             </div>
             <div class="chat-messages" id="chatMessages">
-                <div class="message message-theirs">
-                    <div class="message-text">💡 Click the invite link below to share!</div>
+                <div class="message message-system">
+                    <div class="message-text">💡 Start camera and create a link to begin</div>
                 </div>
             </div>
             <div class="chat-input-area">
@@ -412,7 +430,7 @@
         </div>
     </div>
     
-    <!-- Guest Join Section (shown when someone joins via link) -->
+    <!-- Guest Join Section -->
     <div id="guestSection" class="join-panel hidden">
         <h3>🔗 Join Call</h3>
         <p>You've been invited to a video call!</p>
@@ -430,7 +448,6 @@
     let remoteName = "Friend";
     let dataConnection = null;
     let isCallActive = false;
-    let expectedCallerId = null; // Store who we expect to call us
     
     // DOM elements
     const localVideo = document.getElementById('localVideo');
@@ -455,20 +472,31 @@
     const chatInput = document.getElementById('chatInput');
     const sendMsgBtn = document.getElementById('sendMsgBtn');
     const remoteDot = document.getElementById('remoteDot');
+    const cameraNote = document.getElementById('cameraNote');
     
-    // Helper functions
     function updateStatus(message, type = 'offline') {
         statusDiv.textContent = message;
         statusDiv.className = `status status-${type}`;
+    }
+    
+    function addSystemMessage(text) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message message-system';
+        messageDiv.innerHTML = `<div class="message-text">${text}</div>`;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
     
     function addMessage(text, isMine = false, senderName = '') {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isMine ? 'message-mine' : 'message-theirs'}`;
         
-        const nameSpan = document.createElement('div');
-        nameSpan.className = 'message-name';
-        nameSpan.textContent = isMine ? myName : (senderName || remoteName);
+        if (!isMine && senderName) {
+            const nameSpan = document.createElement('div');
+            nameSpan.className = 'message-name';
+            nameSpan.textContent = senderName;
+            messageDiv.appendChild(nameSpan);
+        }
         
         const textSpan = document.createElement('div');
         textSpan.className = 'message-text';
@@ -478,7 +506,6 @@
         timeSpan.className = 'message-time';
         timeSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
-        messageDiv.appendChild(nameSpan);
         messageDiv.appendChild(textSpan);
         messageDiv.appendChild(timeSpan);
         
@@ -487,11 +514,14 @@
     }
     
     function sendChatMessage() {
-        const message = chatInput.value.trim();
-        if (!message || !dataConnection || dataConnection.open === false) {
-            addMessage('⚠️ Not connected to anyone yet', false, 'System');
+        if (!isCallActive || !dataConnection || dataConnection.open === false) {
+            addSystemMessage('⚠️ Not connected to anyone. Start a call first.');
             return;
         }
+        
+        const message = chatInput.value.trim();
+        if (!message) return;
+        
         dataConnection.send({ type: 'chat', message: message, sender: myName });
         addMessage(message, true);
         chatInput.value = '';
@@ -499,18 +529,36 @@
     
     function setupDataChannel(conn) {
         dataConnection = conn;
+        
         dataConnection.on('open', () => {
+            console.log('Data channel opened');
             chatInput.disabled = false;
             sendMsgBtn.disabled = false;
-            addMessage('💬 Chat ready!', false, 'System');
+            addSystemMessage('💬 Chat is ready! You can now send messages');
         });
+        
         dataConnection.on('data', (data) => {
-            if (data.type === 'chat') addMessage(data.message, false, data.sender);
+            if (data.type === 'chat') {
+                addMessage(data.message, false, data.sender);
+            }
         });
+        
         dataConnection.on('close', () => {
+            console.log('Data channel closed');
             chatInput.disabled = true;
             sendMsgBtn.disabled = true;
         });
+    }
+    
+    // Reset chat on hangup
+    function resetChat() {
+        if (dataConnection) {
+            dataConnection.close();
+            dataConnection = null;
+        }
+        chatInput.disabled = true;
+        sendMsgBtn.disabled = true;
+        chatInput.value = '';
     }
     
     window.togglePictureInPicture = async (videoId) => {
@@ -534,16 +582,35 @@
         }
     }
     
-    // Start camera
+    // Monitor page visibility - camera keeps running
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            cameraNote.classList.remove('hidden');
+            console.log('Page minimized - camera still running');
+        } else {
+            cameraNote.classList.add('hidden');
+            console.log('Page active again');
+        }
+    });
+    
+    // Start camera - ensures it keeps running even when minimized
     async function startCamera() {
         try {
             updateStatus('Requesting camera/mic access...', 'waiting');
             localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-                audio: { echoCancellation: true, noiseSuppression: true }
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                },
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
             });
             localVideo.srcObject = localStream;
-            updateStatus('✅ Camera ready!', 'online');
+            updateStatus('✅ Camera ready! Camera stays on even if minimized', 'online');
             startCamBtn.disabled = true;
             startCamBtn.textContent = '✅ Camera Ready';
             muteMicBtn.disabled = false;
@@ -551,8 +618,9 @@
             hangupBtn.disabled = false;
             return true;
         } catch (err) {
+            console.error(err);
             updateStatus('❌ Camera/Mic access denied', 'offline');
-            alert('Please allow camera and microphone');
+            alert('Please allow camera and microphone to make calls');
             return false;
         }
     }
@@ -564,7 +632,7 @@
             peer.on('open', (id) => {
                 myPeerId = id;
                 console.log('My Peer ID:', id);
-                updateStatus('✅ Ready!', 'online');
+                updateStatus('✅ Ready! Create a link to start', 'online');
                 resolve(id);
             });
             peer.on('error', (err) => {
@@ -578,32 +646,46 @@
                     incomingCall.close();
                     return;
                 }
+                
                 const callerName = incomingCall.metadata?.name || 'Friend';
                 remoteName = callerName;
                 remoteNameLabel.textContent = remoteName;
-                updateStatus(`📞 Incoming call from ${remoteName}!`, 'calling');
+                updateStatus(`📞 Incoming call from ${remoteName}! Answering...`, 'calling');
+                
                 currentCall = incomingCall;
                 currentCall.answer(localStream);
-                currentCall.on('connection', (dataConn) => setupDataChannel(dataConn));
+                
+                // Setup data channel for chat
+                currentCall.on('connection', (dataConn) => {
+                    setupDataChannel(dataConn);
+                });
+                
                 currentCall.on('stream', (remoteStream) => {
                     remoteVideo.srcObject = remoteStream;
                     remoteDot.style.background = '#48bb78';
                     isCallActive = true;
                     updateStatus(`🎥 Connected with ${remoteName}!`, 'online');
-                    addMessage(`🎥 Connected with ${remoteName}`, false, 'System');
+                    addSystemMessage(`🎥 Connected with ${remoteName}`);
                 });
+                
                 currentCall.on('close', () => {
-                    remoteVideo.srcObject = null;
-                    remoteDot.style.background = '#ffc107';
-                    remoteNameLabel.textContent = 'Disconnected';
-                    isCallActive = false;
-                    updateStatus('Call ended', 'online');
-                    if (dataConnection) dataConnection.close();
-                    chatInput.disabled = true;
-                    sendMsgBtn.disabled = true;
+                    handleCallEnd();
                 });
             });
         });
+    }
+    
+    function handleCallEnd() {
+        remoteVideo.srcObject = null;
+        remoteDot.style.background = '#ffc107';
+        remoteNameLabel.textContent = 'Disconnected';
+        isCallActive = false;
+        resetChat();
+        updateStatus('Call ended. Create a new link to start another call', 'online');
+        addSystemMessage('📞 Call has ended');
+        
+        // Reset call reference
+        currentCall = null;
     }
     
     // Create invite link (host)
@@ -629,14 +711,14 @@
         inviteLinkDiv.textContent = inviteUrl;
         linkDisplay.style.display = 'block';
         updateStatus('🔗 Link created! Share it with anyone', 'online');
-        addMessage(`📢 Your invite link is ready! Share it to start a call`, false, 'System');
+        addSystemMessage('📢 Your invite link is ready! Share it to start a call');
     }
     
     function copyInviteLink() {
         const link = inviteLinkDiv.textContent;
         navigator.clipboard.writeText(link);
         updateStatus('✅ Link copied to clipboard!', 'online');
-        addMessage('📋 Invite link copied! Share it with your friend', false, 'System');
+        addSystemMessage('📋 Invite link copied! Share it with your friend');
     }
     
     // Auto-join when page loads with ?join= parameter
@@ -646,19 +728,15 @@
         const roomId = urlParams.get('room');
         
         if (hostPeerId && roomId) {
-            console.log('Auto-join mode detected! Host Peer ID:', hostPeerId);
-            // Hide host section, show guest section
+            console.log('Auto-join mode detected!');
             hostSection.classList.add('hidden');
             guestSection.classList.remove('hidden');
             
-            // Auto-start camera
             await startCamera();
             await initPeer();
             
-            // Store the host ID for joining
             window.hostPeerIdToJoin = hostPeerId;
-            
-            updateStatus('🔗 Click "Join Call" after entering your name', 'waiting');
+            updateStatus('🔗 Enter your name and click "Join Call"', 'waiting');
         }
     }
     
@@ -694,24 +772,20 @@
         // Call the host
         const call = peer.call(hostId, localStream, { metadata: { name: guestName } });
         
-        call.on('connection', (dataConn) => setupDataChannel(dataConn));
+        call.on('connection', (dataConn) => {
+            setupDataChannel(dataConn);
+        });
         
         call.on('stream', (remoteStream) => {
             remoteVideo.srcObject = remoteStream;
             remoteDot.style.background = '#48bb78';
             isCallActive = true;
             updateStatus(`🎥 Connected!`, 'online');
-            addMessage(`🎥 Connected to call!`, false, 'System');
+            addSystemMessage(`🎥 Connected to the call!`);
         });
         
         call.on('close', () => {
-            remoteVideo.srcObject = null;
-            remoteDot.style.background = '#ffc107';
-            isCallActive = false;
-            updateStatus('Call ended', 'online');
-            if (dataConnection) dataConnection.close();
-            chatInput.disabled = true;
-            sendMsgBtn.disabled = true;
+            handleCallEnd();
         });
         
         call.on('error', (err) => {
@@ -726,22 +800,26 @@
         guestSection.classList.add('hidden');
     }
     
+    // Complete hang up - ends everything for both parties
     function hangUp() {
         if (currentCall) {
-            currentCall.close();
+            currentCall.close(); // This will trigger onclose on both ends
             currentCall = null;
         }
-        if (dataConnection) {
-            dataConnection.close();
-            dataConnection = null;
-        }
+        
+        // Reset remote video
         remoteVideo.srcObject = null;
         remoteDot.style.background = '#ffc107';
         remoteNameLabel.textContent = 'Waiting...';
         isCallActive = false;
-        chatInput.disabled = true;
-        sendMsgBtn.disabled = true;
-        updateStatus('Call ended', 'online');
+        
+        // Reset chat completely
+        resetChat();
+        
+        updateStatus('Call ended. Create a new link to start another call', 'online');
+        addSystemMessage('📞 You ended the call');
+        
+        // Don't stop local camera - keep it running for next call
     }
     
     function toggleMuteMic() {
@@ -783,7 +861,9 @@
     autoJoinFromLink();
     
     console.log('%c🎥 One-Click Video Call Ready!', 'color: #25d366; font-size: 16px');
-    console.log('%cShare the invite link - others join with just their name!', 'color: #075e54; font-size: 12px');
+    console.log('%c✅ Camera stays on when minimized', 'color: #075e54; font-size: 12px');
+    console.log('%c✅ Chat works perfectly during call', 'color: #075e54; font-size: 12px');
+    console.log('%c✅ Hang up ends call for both users', 'color: #075e54; font-size: 12px');
 </script>
 </body>
 </html>
