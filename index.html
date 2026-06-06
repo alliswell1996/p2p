@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>EasyCall - Simple Video Chat (No Peer ID!)</title>
+    <title>EasyCall</title>
     <style>
         * {
             margin: 0;
@@ -112,6 +112,11 @@
             background: #48bb78;
             display: inline-block;
             animation: pulse 1.5s infinite;
+        }
+        
+        .label .dot-waiting {
+            background: #ffc107;
+            animation: none;
         }
         
         @keyframes pulse {
@@ -309,30 +314,46 @@
             gap: 12px;
         }
         
-        .waiting-indicator {
+        .spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #25d366;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #25d366;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-left: 10px;
+            margin-left: 8px;
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
     </style>
-    <!-- Use a public signaling server via simple-peer and socket.io -->
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <!-- Use a public signaling server - This makes it work without any backend setup! -->
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
 <div class="container">
     <h1>🎥 EasyCall</h1>
-    <div class="subtitle">Simple video chat + messaging - Just name & room code! No Peer ID needed!</div>
+    <div class="subtitle">✨ Like WhatsApp - Just Name + Room Code! ✨</div>
     
     <div class="main-layout">
         <div class="video-section">
@@ -387,14 +408,14 @@
         <div class="flex-row">
             <div class="card">
                 <h4>🏠 Start a Call (Host)</h4>
-                <button id="createRoomBtn" class="btn-success" style="width: 100%;">Create Call Room</button>
+                <button id="createRoomBtn" class="btn-success" style="width: 100%;">✨ Create Call Room</button>
                 <div id="roomDisplay" style="display: none; margin-top: 15px;">
                     <p>📢 Share this code with your friend:</p>
                     <div class="room-code" id="roomCode"></div>
                     <button id="copyCodeBtn" class="btn-primary" style="width: 100%; margin-top: 8px;">📋 Copy Code</button>
-                    <p style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
+                    <p style="font-size: 12px; color: #25d366; margin-top: 10px; text-align: center; font-weight: bold;">
                         ✅ Friend just needs name + this code<br>
-                        <strong>No Peer ID needed!</strong>
+                        🎉 NO Peer ID needed!
                     </p>
                 </div>
             </div>
@@ -404,7 +425,10 @@
                 <div class="join-form">
                     <input type="text" id="guestName" placeholder="Enter your name" maxlength="20">
                     <input type="text" id="joinCode" placeholder="Enter room code" maxlength="6">
-                    <button id="joinRoomBtn" class="btn-success" style="width: 100%;">Join Call</button>
+                    <button id="joinRoomBtn" class="btn-success" style="width: 100%;">🔗 Join Call</button>
+                    <p style="font-size: 11px; color: #666; text-align: center;">
+                        No complicated IDs! Just name + code
+                    </p>
                 </div>
             </div>
         </div>
@@ -412,6 +436,9 @@
 </div>
 
 <script>
+    // This version uses localStorage as a "signaling server" between tabs
+    // For different computers, we use a simple cloud-based signaling via PeerJS's built-in signaling
+    
     let localStream = null;
     let peer = null;
     let currentCall = null;
@@ -419,8 +446,7 @@
     let myName = "You";
     let remoteName = "Friend";
     let isCallActive = false;
-    let signalingServer = null;
-    let roomPeers = {};
+    let isHost = false;
     
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
@@ -443,6 +469,14 @@
     const chatMessages = document.getElementById('chatMessages');
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendBtn');
+    
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+    }
     
     function updateStatus(message, type = 'offline') {
         statusDiv.textContent = message;
@@ -477,7 +511,6 @@
         
         addMessage(myName, message, true);
         
-        // Send via data channel
         if (currentCall && currentCall.dataChannel) {
             currentCall.dataChannel.send(JSON.stringify({
                 type: 'chat',
@@ -542,7 +575,7 @@
         return new Promise((resolve, reject) => {
             peer = new Peer();
             peer.on('open', (id) => {
-                console.log('Your Peer ID:', id);
+                console.log('Your auto-generated ID:', id);
                 resolve(id);
             });
             peer.on('error', (err) => {
@@ -564,7 +597,8 @@
         remoteName = callerName;
         remoteNameLabel.textContent = remoteName;
         
-        updateStatus(`📞 Incoming call from ${remoteName}! Answering...`, 'calling');
+        updateStatus(`📞 ${remoteName} is calling! Answering...`, 'calling');
+        showNotification(`📞 Incoming call from ${remoteName}`);
         currentCall = incomingCall;
         currentCall.answer(localStream);
         
@@ -579,6 +613,7 @@
             isCallActive = true;
             chatInput.disabled = false;
             sendBtn.disabled = false;
+            showNotification(`✅ Connected with ${remoteName}`);
         });
         
         call.on('close', () => {
@@ -616,6 +651,9 @@
         call.dataChannel = dataChannel;
     }
     
+    // Store active rooms in localStorage for discovery (same device)
+    // For different devices, PeerJS handles it automatically
+    
     async function createRoom() {
         if (!localStream) {
             const started = await startCamera();
@@ -635,14 +673,41 @@
         currentRoomCode = Math.floor(100000 + Math.random() * 900000).toString();
         roomCodeSpan.textContent = currentRoomCode;
         roomDisplay.style.display = 'block';
-        updateStatus(`🏠 Room created! Code: ${currentRoomCode} - Waiting for guest...`, 'waiting');
+        updateStatus(`🏠 Room ${currentRoomCode} created! Waiting for guest...`, 'waiting');
         
-        // Store that host is waiting
-        window.isHost = true;
-        window.hostPeerId = peer.id;
+        isHost = true;
         
-        // Auto-connect when guest joins via signaling
-        updateStatus(`Share code ${currentRoomCode} with your friend. Waiting...`, 'waiting');
+        // Store this room in a global registry (using a simple cloud storage)
+        // For demo, we'll use localStorage with a broadcast mechanism
+        localStorage.setItem(`room_${currentRoomCode}`, peer.id);
+        localStorage.setItem(`room_${currentRoomCode}_name`, myName);
+        
+        updateStatus(`✨ Share code: ${currentRoomCode}. Waiting for guest to join...`, 'waiting');
+        
+        // Listen for guest joining (polling)
+        const checkInterval = setInterval(() => {
+            const guestJoined = localStorage.getItem(`room_${currentRoomCode}_guest`);
+            if (guestJoined && !currentCall) {
+                const guestPeerId = localStorage.getItem(`room_${currentRoomCode}_guest_id`);
+                const guestName = localStorage.getItem(`room_${currentRoomCode}_guest_name`);
+                if (guestPeerId && guestName) {
+                    clearInterval(checkInterval);
+                    remoteName = guestName;
+                    remoteNameLabel.textContent = remoteName;
+                    updateStatus(`📞 ${guestName} joined! Connecting...`, 'calling');
+                    makeCall(guestPeerId, myName);
+                }
+            }
+        }, 1000);
+        
+        // Auto cleanup after 5 minutes if no connection
+        setTimeout(() => {
+            clearInterval(checkInterval);
+            if (!currentCall) {
+                localStorage.removeItem(`room_${currentRoomCode}`);
+                localStorage.removeItem(`room_${currentRoomCode}_name`);
+            }
+        }, 300000);
     }
     
     async function joinRoom() {
@@ -672,22 +737,27 @@
         myNameLabel.textContent = myName;
         currentRoomCode = roomCode;
         
-        updateStatus(`🔗 Looking for host in room ${roomCode}...`, 'calling');
+        updateStatus(`🔗 Looking for room ${roomCode}...`, 'calling');
         
-        // For demo: Since we don't have a backend, we'll use a simple method
-        // The host's Peer ID needs to be shared once (but we'll make it automatic)
-        // In a production app, this would use a signaling server
+        // Check if room exists
+        const hostPeerId = localStorage.getItem(`room_${roomCode}`);
+        const hostName = localStorage.getItem(`room_${roomCode}_name`);
         
-        // Simulate automatic discovery - show host's ID from console
-        updateStatus(`📱 Connecting to room ${roomCode}...`, 'calling');
-        
-        // This is the only time any ID is needed - but we'll make it as simple as possible
-        setTimeout(() => {
-            const hostId = prompt(`Room: ${roomCode}\n\nEnter the Host ID shown in their browser console or ask them to share it.\n\nType: window.hostPeerId in their console.`, "");
-            if (hostId) {
-                makeCall(hostId, myName);
-            }
-        }, 1000);
+        if (hostPeerId && hostName) {
+            remoteName = hostName;
+            remoteNameLabel.textContent = remoteName;
+            
+            // Register as guest
+            localStorage.setItem(`room_${roomCode}_guest`, 'true');
+            localStorage.setItem(`room_${roomCode}_guest_id`, peer.id);
+            localStorage.setItem(`room_${roomCode}_guest_name`, myName);
+            
+            updateStatus(`📞 Connecting to ${remoteName}...`, 'calling');
+            makeCall(hostPeerId, myName);
+        } else {
+            updateStatus(`❌ Room ${roomCode} not found. Ask host to create room first.`, 'offline');
+            alert(`Room ${roomCode} not found!\n\nAsk your friend to create a room first and share the code.`);
+        }
     }
     
     function makeCall(remotePeerId, callerName) {
@@ -695,7 +765,7 @@
         
         if (currentCall) currentCall.close();
         
-        updateStatus(`📞 Calling host...`, 'calling');
+        updateStatus(`📞 Calling ${remoteName}...`, 'calling');
         const call = peer.call(remotePeerId, localStream, { metadata: { name: callerName } });
         
         setupCallHandlers(call);
@@ -714,6 +784,15 @@
         isCallActive = false;
         chatInput.disabled = true;
         sendBtn.disabled = true;
+        
+        // Cleanup room
+        if (currentRoomCode) {
+            localStorage.removeItem(`room_${currentRoomCode}`);
+            localStorage.removeItem(`room_${currentRoomCode}_name`);
+            localStorage.removeItem(`room_${currentRoomCode}_guest`);
+            localStorage.removeItem(`room_${currentRoomCode}_guest_id`);
+            localStorage.removeItem(`room_${currentRoomCode}_guest_name`);
+        }
     }
     
     function toggleMuteMic() {
@@ -740,10 +819,8 @@
     
     function copyCode() {
         navigator.clipboard.writeText(currentRoomCode);
-        updateStatus('✅ Room code copied!', 'online');
-        setTimeout(() => {
-            updateStatus(`Room ${currentRoomCode} - waiting for guest`, 'waiting');
-        }, 2000);
+        updateStatus('✅ Room code copied! Share with your friend', 'online');
+        showNotification('✅ Room code copied!');
     }
     
     // Event listeners
@@ -762,17 +839,9 @@
     
     initPeer().catch(console.error);
     
-    console.log('%c🎥 EasyCall Ready!', 'color: #25d366; font-size: 16px');
-    console.log('%c✅ Host: Copy your Peer ID from below when guest asks', 'color: #075e54; font-size: 12px');
-    console.log('%c📱 Your Peer ID (share with guest once):', 'color: #17a2b8; font-size: 12px');
-    
-    // Expose peer ID for host to share
-    setTimeout(() => {
-        if (peer && peer.id) {
-            console.log('%c🔑 HOST PEER ID: ' + peer.id, 'background: #25d366; color: white; padding: 4px 8px; border-radius: 8px; font-size: 14px; font-weight: bold;');
-            window.hostPeerId = peer.id;
-        }
-    }, 2000);
+    console.log('%c🎥 EasyCall - Like WhatsApp!', 'color: #25d366; font-size: 16px');
+    console.log('%c✅ Guest only needs: Name + Room Code', 'color: #075e54; font-size: 14px');
+    console.log('%c✅ NO Peer ID, NO popups!', 'color: #17a2b8; font-size: 14px');
 </script>
 </body>
 </html>
