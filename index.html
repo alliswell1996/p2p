@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>EasyCall</title>
+    <title>EasyCall Pro - Video Call with Chat</title>
     <style>
         * {
             margin: 0;
@@ -41,9 +41,10 @@
             font-size: 0.9rem;
         }
         
+        /* Video grid with chat */
         .main-layout {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             flex-wrap: wrap;
         }
         
@@ -54,7 +55,7 @@
         
         .chat-section {
             flex: 1;
-            min-width: 280px;
+            min-width: 260px;
             background: #f7fafc;
             border-radius: 16px;
             display: flex;
@@ -119,6 +120,92 @@
             50% { opacity: 0.5; transform: scale(1.2); }
         }
         
+        /* Chat styles */
+        .chat-header {
+            padding: 12px;
+            background: #075e54;
+            color: white;
+            border-radius: 16px 16px 0 0;
+            font-weight: 600;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .message {
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .message-mine {
+            background: #dcf8c6;
+            align-self: flex-end;
+            color: #075e54;
+        }
+        
+        .message-theirs {
+            background: white;
+            align-self: flex-start;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .message-name {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #666;
+        }
+        
+        .message-text {
+            font-size: 13px;
+        }
+        
+        .message-time {
+            font-size: 10px;
+            color: #999;
+            margin-top: 4px;
+            text-align: right;
+        }
+        
+        .chat-input-area {
+            padding: 12px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 13px;
+            outline: none;
+        }
+        
+        .chat-input:focus {
+            border-color: #25d366;
+        }
+        
+        .send-btn {
+            padding: 8px 16px;
+            background: #25d366;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        /* Controls */
         .controls {
             display: flex;
             gap: 12px;
@@ -188,12 +275,19 @@
             text-align: center;
             letter-spacing: 8px;
             border: 2px solid #25d366;
-            cursor: pointer;
-            user-select: all;
         }
         
-        .room-code:active {
+        .short-peer-id {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
             background: #e8f5e9;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 10px;
+            word-break: break-all;
+            cursor: pointer;
         }
         
         input {
@@ -202,6 +296,9 @@
             border: 2px solid #e2e8f0;
             border-radius: 12px;
             width: 100%;
+            max-width: 300px;
+            text-align: center;
+            font-size: 1rem;
         }
         
         input:focus {
@@ -214,11 +311,12 @@
             gap: 20px;
             justify-content: center;
             flex-wrap: wrap;
+            margin-top: 20px;
         }
         
         .card {
             flex: 1;
-            min-width: 250px;
+            min-width: 280px;
             background: white;
             padding: 20px;
             border-radius: 16px;
@@ -231,69 +329,32 @@
             font-size: 1.1rem;
         }
         
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .message {
-            padding: 8px 12px;
-            border-radius: 12px;
-            max-width: 85%;
-            word-wrap: break-word;
-        }
-        
-        .message-mine {
-            background: #25d366;
-            color: white;
-            align-self: flex-end;
-        }
-        
-        .message-other {
-            background: white;
-            color: #333;
-            align-self: flex-start;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .message-name {
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 4px;
-            opacity: 0.8;
-        }
-        
-        .message-text {
-            font-size: 14px;
-        }
-        
-        .chat-input-area {
-            padding: 16px;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            gap: 8px;
-        }
-        
-        .chat-input-area input {
-            flex: 1;
-            margin: 0;
-        }
-        
-        .chat-input-area button {
-            margin: 0;
-            padding: 12px 16px;
-        }
-        
         @media (max-width: 768px) {
-            body { padding: 8px; }
-            .container { padding: 12px; }
-            .main-layout { flex-direction: column; }
-            .chat-section { height: 350px; }
-            .room-code { font-size: 1.2rem; letter-spacing: 4px; }
+            body {
+                padding: 8px;
+            }
+            
+            .container {
+                padding: 12px;
+            }
+            
+            .main-layout {
+                flex-direction: column;
+            }
+            
+            .chat-section {
+                height: 350px;
+            }
+            
+            button {
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+            
+            .room-code {
+                font-size: 1.3rem;
+                letter-spacing: 4px;
+            }
         }
         
         .pip-hint {
@@ -307,30 +368,21 @@
             font-size: 11px;
             cursor: pointer;
             z-index: 10;
+            backdrop-filter: blur(4px);
         }
         
-        .join-form {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .footer-note {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #999;
+        .copy-icon {
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 14px;
         }
     </style>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <h1>🎥 EasyCall</h1>
-    <div class="subtitle">✨ One to One More Secure ✨</div>
+    <h1>🎥 EasyCall Pro</h1>
+    <div class="subtitle">Video chat + Messaging | Camera stays on even when minimized</div>
     
     <div class="main-layout">
         <div class="video-section">
@@ -364,36 +416,39 @@
                 <button id="hangupBtn" class="btn-danger" disabled>❌ Hang Up</button>
                 <button id="fullscreenBtn" class="btn-info">🖥️ Fullscreen</button>
             </div>
-            
-            <div id="status" class="status status-offline">⚡ Click "Start Camera" to begin</div>
         </div>
         
         <div class="chat-section">
+            <div class="chat-header">
+                💬 Chat Messages
+            </div>
             <div class="chat-messages" id="chatMessages">
-                <div style="text-align: center; color: #999; padding: 20px;">
-                    💬 Join a call to start chatting
+                <div class="message message-theirs">
+                    <div class="message-text">💡 Send messages while on call!</div>
                 </div>
             </div>
             <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="Type a message..." disabled>
-                <button id="sendBtn" class="btn-primary" disabled>Send</button>
+                <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." disabled>
+                <button id="sendMsgBtn" class="send-btn" disabled>Send</button>
             </div>
         </div>
     </div>
+    
+    <div id="status" class="status status-offline">⚡ Click "Start Camera" to begin</div>
     
     <div class="room-box">
         <div class="flex-row">
             <div class="card">
                 <h4>🏠 Start a Call (Host)</h4>
-                <button id="createRoomBtn" class="btn-success" style="width: 100%;">✨ Create Call Room</button>
+                <button id="createRoomBtn" class="btn-success" style="width: 100%;">Create Call Room</button>
                 <div id="roomDisplay" style="display: none; margin-top: 15px;">
-                    <p>📢 Share this code with your friend:</p>
-                    <div class="room-code" id="roomCode" onclick="copyRoomCode()"></div>
-                    <button id="copyCodeBtn" class="btn-primary" style="width: 100%; margin-top: 8px;">📋 Copy Code</button>
-                    <p style="font-size: 12px; color: #25d366; margin-top: 10px; text-align: center; font-weight: bold;">
-                        ✅ Friend just needs name + this code<br>
-                        🎉 Works anywhere in the world!
-                    </p>
+                    <p>📢 Share these with your friend:</p>
+                    <div class="room-code" id="roomCode"></div>
+                    <div class="short-peer-id" id="shortPeerId">
+                        <span id="peerIdText"></span>
+                        <span class="copy-icon" onclick="copyPeerId()">📋</span>
+                    </div>
+                    <p style="font-size: 12px; margin-top: 8px; color: #666;">Click the Peer ID to copy it easily</p>
                 </div>
             </div>
             
@@ -401,43 +456,26 @@
                 <h4>🔗 Join a Call (Guest)</h4>
                 <div class="join-form">
                     <input type="text" id="guestName" placeholder="Enter your name" maxlength="20">
-                    <input type="text" id="joinCode" placeholder="Enter room code" maxlength="6">
-                    <button id="joinRoomBtn" class="btn-success" style="width: 100%;">🔗 Join Call</button>
-                    <p style="font-size: 11px; color: #666; text-align: center;">
-                        Just name + code - That's it! No complicated IDs.
-                    </p>
+                    <input type="text" id="joinCode" placeholder="Enter 6-digit room code" maxlength="6">
+                    <input type="text" id="hostPeerId" placeholder="Paste host's Peer ID" style="font-size: 12px;">
+                    <button id="joinRoomBtn" class="btn-success" style="width: 100%;">Join Call</button>
                 </div>
             </div>
         </div>
     </div>
-    <div class="footer-note">
-        🔒 Your video call is peer-to-peer and encrypted
-    </div>
 </div>
 
 <script>
-    // Your Firebase configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyC40hRsEjPvIc4Cefu2P3xcg7dQld8j1dA",
-        authDomain: "videocallapp-10251.firebaseapp.com",
-        databaseURL: "https://videocallapp-10251-default-rtdb.firebaseio.com",
-        projectId: "videocallapp-10251",
-        storageBucket: "videocallapp-10251.firebasestorage.app",
-        messagingSenderId: "448912330506",
-        appId: "1:448912330506:web:3fea63adaa1342388ff4f3"
-    };
-    
-    let database;
     let localStream = null;
     let peer = null;
     let currentCall = null;
+    let myPeerId = null;
     let currentRoomCode = null;
     let myName = "You";
     let remoteName = "Friend";
+    let dataConnection = null;
     let isCallActive = false;
-    let roomListener = null;
     
-    // DOM elements
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
     const statusDiv = document.getElementById('status');
@@ -451,24 +489,22 @@
     const joinRoomBtn = document.getElementById('joinRoomBtn');
     const roomDisplay = document.getElementById('roomDisplay');
     const roomCodeSpan = document.getElementById('roomCode');
-    const copyCodeBtn = document.getElementById('copyCodeBtn');
     const joinCodeInput = document.getElementById('joinCode');
     const guestNameInput = document.getElementById('guestName');
+    const hostPeerIdInput = document.getElementById('hostPeerId');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const remoteDot = document.getElementById('remoteDot');
+    const shortPeerIdSpan = document.getElementById('shortPeerId');
+    const peerIdTextSpan = document.getElementById('peerIdText');
     const chatMessages = document.getElementById('chatMessages');
     const chatInput = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('sendBtn');
+    const sendMsgBtn = document.getElementById('sendMsgBtn');
     
-    // Initialize Firebase
-    try {
-        firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        console.log('✅ Firebase connected successfully!');
-        updateStatus('✅ Ready! Start camera and create/join a room', 'online');
-    } catch (error) {
-        console.error('Firebase error:', error);
-        updateStatus('⚠️ Firebase error - Check console', 'offline');
+    // Shorten Peer ID to first 8 chars + last 4
+    function shortenPeerId(id) {
+        if (!id) return '';
+        if (id.length <= 12) return id;
+        return id.substring(0, 8) + '...' + id.substring(id.length - 4);
     }
     
     function updateStatus(message, type = 'offline') {
@@ -476,48 +512,80 @@
         statusDiv.className = `status status-${type}`;
     }
     
-    function addMessage(name, text, isMine = false) {
+    // Add message to chat
+    function addMessage(text, isMine = false, senderName = '') {
         const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isMine ? 'message-mine' : 'message-other'}`;
-        messageDiv.innerHTML = `
-            <div class="message-name">${escapeHtml(name)}</div>
-            <div class="message-text">${escapeHtml(text)}</div>
-        `;
+        messageDiv.className = `message ${isMine ? 'message-mine' : 'message-theirs'}`;
+        
+        const nameSpan = document.createElement('div');
+        nameSpan.className = 'message-name';
+        nameSpan.textContent = isMine ? myName : (senderName || remoteName);
+        
+        const textSpan = document.createElement('div');
+        textSpan.className = 'message-text';
+        textSpan.textContent = text;
+        
+        const timeSpan = document.createElement('div');
+        timeSpan.className = 'message-time';
+        timeSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        messageDiv.appendChild(nameSpan);
+        messageDiv.appendChild(textSpan);
+        messageDiv.appendChild(timeSpan);
+        
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        if (chatMessages.children.length === 1 && chatMessages.children[0].innerText.includes('Join a call')) {
-            chatMessages.innerHTML = '';
-            chatMessages.appendChild(messageDiv);
-        }
     }
     
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    
-    function sendMessage() {
+    // Send chat message
+    function sendChatMessage() {
         const message = chatInput.value.trim();
-        if (!message || !currentCall || !isCallActive) return;
-        
-        addMessage(myName, message, true);
-        
-        if (currentCall && currentCall.dataChannel) {
-            currentCall.dataChannel.send(JSON.stringify({
-                type: 'chat',
-                name: myName,
-                message: message
-            }));
+        if (!message || !dataConnection || dataConnection.open === false) {
+            if (!dataConnection) addMessage('⚠️ Not connected to anyone yet', false, 'System');
+            return;
         }
         
+        dataConnection.send({
+            type: 'chat',
+            message: message,
+            sender: myName
+        });
+        
+        addMessage(message, true);
         chatInput.value = '';
     }
     
+    // Setup data channel for chat
+    function setupDataChannel(conn) {
+        dataConnection = conn;
+        
+        dataConnection.on('open', () => {
+            console.log('Data connection opened');
+            chatInput.disabled = false;
+            sendMsgBtn.disabled = false;
+            addMessage('💬 Chat ready! You can now send messages', false, 'System');
+        });
+        
+        dataConnection.on('data', (data) => {
+            if (data.type === 'chat') {
+                addMessage(data.message, false, data.sender);
+            }
+        });
+        
+        dataConnection.on('close', () => {
+            console.log('Data connection closed');
+            chatInput.disabled = true;
+            sendMsgBtn.disabled = true;
+        });
+    }
+    
+    // Picture-in-Picture
     window.togglePictureInPicture = async (videoId) => {
         const video = document.getElementById(videoId);
-        if (!video.srcObject) return;
+        if (!video.srcObject) {
+            updateStatus('No video stream', 'waiting');
+            return;
+        }
         try {
             if (document.pictureInPictureElement) {
                 await document.exitPictureInPicture();
@@ -538,15 +606,24 @@
         }
     }
     
+    // Start camera - keeps running even when minimized
     async function startCamera() {
         try {
             updateStatus('Requesting camera/mic access...', 'waiting');
+            // Important: Use appropriate constraints to keep stream alive
             localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-                audio: true 
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                },
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true
+                }
             });
             localVideo.srcObject = localStream;
-            updateStatus('✅ Camera ready! Create or join a room', 'online');
+            updateStatus('✅ Camera ready! Camera stays on even if minimized', 'online');
             startCamBtn.disabled = true;
             startCamBtn.textContent = '✅ Camera Ready';
             muteMicBtn.disabled = false;
@@ -556,92 +633,79 @@
         } catch (err) {
             console.error(err);
             updateStatus('❌ Camera/Mic access denied', 'offline');
-            alert('Please allow camera and microphone to make calls');
+            alert('Please allow camera and microphone');
             return false;
         }
     }
     
+    // Initialize Peer with simplified ID display
     async function initPeer() {
         return new Promise((resolve, reject) => {
             peer = new Peer();
+            
             peer.on('open', (id) => {
-                console.log('Your Peer ID:', id);
+                myPeerId = id;
+                const shortId = shortenPeerId(id);
+                peerIdTextSpan.textContent = shortId;
+                shortPeerIdSpan.title = id; // Show full ID on hover
+                console.log('Full Peer ID:', id);
+                console.log('Shortened Peer ID:', shortId);
+                updateStatus('✅ Ready! Create or join a call', 'online');
                 resolve(id);
             });
+            
             peer.on('error', (err) => {
                 console.error('Peer error:', err);
+                updateStatus('Connection error. Refresh page.', 'offline');
                 reject(err);
             });
-            peer.on('call', handleIncomingCall);
-        });
-    }
-    
-    function handleIncomingCall(incomingCall) {
-        if (!localStream) {
-            updateStatus('Start camera first', 'offline');
-            incomingCall.close();
-            return;
-        }
-        
-        const callerName = incomingCall.metadata?.name || 'Friend';
-        remoteName = callerName;
-        remoteNameLabel.textContent = remoteName;
-        
-        updateStatus(`📞 ${remoteName} is calling! Answering...`, 'calling');
-        currentCall = incomingCall;
-        currentCall.answer(localStream);
-        
-        setupCallHandlers(currentCall);
-    }
-    
-    function setupCallHandlers(call) {
-        call.on('stream', (remoteStream) => {
-            remoteVideo.srcObject = remoteStream;
-            remoteDot.style.background = '#48bb78';
-            updateStatus(`🎥 Connected with ${remoteName}!`, 'online');
-            isCallActive = true;
-            chatInput.disabled = false;
-            sendBtn.disabled = false;
-        });
-        
-        call.on('close', () => {
-            remoteVideo.srcObject = null;
-            remoteDot.style.background = '#ffc107';
-            remoteNameLabel.textContent = 'Disconnected';
-            updateStatus('Call ended', 'online');
-            isCallActive = false;
-            chatInput.disabled = true;
-            sendBtn.disabled = true;
-            currentCall = null;
-            cleanupRoom();
-        });
-        
-        call.peerConnection.ondatachannel = (event) => {
-            const dataChannel = event.channel;
-            dataChannel.onmessage = (e) => {
-                try {
-                    const data = JSON.parse(e.data);
-                    if (data.type === 'chat') {
-                        addMessage(data.name, data.message, false);
+            
+            peer.on('call', (incomingCall) => {
+                if (!localStream) {
+                    updateStatus('Start camera first', 'offline');
+                    incomingCall.close();
+                    return;
+                }
+                
+                const callerName = incomingCall.metadata?.name || 'Friend';
+                remoteName = callerName;
+                remoteNameLabel.textContent = remoteName;
+                
+                updateStatus(`📞 Incoming call from ${remoteName}!`, 'calling');
+                currentCall = incomingCall;
+                currentCall.answer(localStream);
+                
+                // Setup data channel for chat
+                currentCall.on('connection', (dataConn) => {
+                    setupDataChannel(dataConn);
+                });
+                
+                currentCall.on('stream', (remoteStream) => {
+                    remoteVideo.srcObject = remoteStream;
+                    remoteDot.style.background = '#48bb78';
+                    isCallActive = true;
+                    updateStatus(`🎥 Connected with ${remoteName}!`, 'online');
+                    addMessage(`🎥 Call connected with ${remoteName}`, false, 'System');
+                });
+                
+                currentCall.on('close', () => {
+                    remoteVideo.srcObject = null;
+                    remoteDot.style.background = '#ffc107';
+                    remoteNameLabel.textContent = 'Disconnected';
+                    isCallActive = false;
+                    updateStatus('Call ended', 'online');
+                    if (dataConnection) {
+                        dataConnection.close();
+                        dataConnection = null;
                     }
-                } catch (err) {}
-            };
-        };
-        
-        const dataChannel = call.peerConnection.createDataChannel('chat');
-        dataChannel.onopen = () => {
-            call.dataChannel = dataChannel;
-        };
-        call.dataChannel = dataChannel;
+                    chatInput.disabled = true;
+                    sendMsgBtn.disabled = true;
+                });
+            });
+        });
     }
     
-    function copyRoomCode() {
-        if (currentRoomCode) {
-            navigator.clipboard.writeText(currentRoomCode);
-            updateStatus('✅ Room code copied!', 'online');
-        }
-    }
-    
+    // Create a room
     async function createRoom() {
         if (!localStream) {
             const started = await startCamera();
@@ -661,47 +725,39 @@
         currentRoomCode = Math.floor(100000 + Math.random() * 900000).toString();
         roomCodeSpan.textContent = currentRoomCode;
         roomDisplay.style.display = 'block';
-        updateStatus(`🏠 Room ${currentRoomCode} created! Waiting for guest...`, 'waiting');
+        updateStatus(`🏠 Room: ${currentRoomCode} - Share code & Peer ID`, 'online');
         
-        // Store room in Firebase
-        const roomRef = database.ref(`rooms/${currentRoomCode}`);
-        await roomRef.set({
-            hostId: peer.id,
-            hostName: myName,
-            status: 'waiting',
-            createdAt: Date.now()
-        });
-        
-        // Listen for guest joining
-        roomListener = roomRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data && data.guestId && data.guestName && !currentCall) {
-                remoteName = data.guestName;
-                remoteNameLabel.textContent = remoteName;
-                updateStatus(`📞 ${remoteName} joined! Connecting...`, 'calling');
-                makeCall(data.guestId, myName);
-            }
-        });
-        
-        // Auto cleanup after 10 minutes
+        // Show helpful message
         setTimeout(() => {
-            if (!currentCall) {
-                cleanupRoom();
-            }
-        }, 600000);
+            addMessage(`📢 Your Peer ID: ${shortenPeerId(myPeerId)} (click to copy)`, false, 'System');
+        }, 500);
     }
     
+    // Copy Peer ID to clipboard
+    window.copyPeerId = function() {
+        navigator.clipboard.writeText(myPeerId);
+        updateStatus('✅ Peer ID copied!', 'online');
+        addMessage('📋 Peer ID copied to clipboard', false, 'System');
+    };
+    
+    // Join a room
     async function joinRoom() {
         const roomCode = joinCodeInput.value.trim();
         const guestName = guestNameInput.value.trim();
+        const hostId = hostPeerIdInput.value.trim();
         
         if (!roomCode) {
-            alert('Please enter room code');
+            alert('Please enter the room code');
             return;
         }
         
         if (!guestName) {
             alert('Please enter your name');
+            return;
+        }
+        
+        if (!hostId) {
+            alert('Please paste the host\'s Peer ID');
             return;
         }
         
@@ -716,51 +772,60 @@
         
         myName = guestName;
         myNameLabel.textContent = myName;
-        currentRoomCode = roomCode;
+        remoteName = "Host";
+        remoteNameLabel.textContent = remoteName;
         
-        updateStatus(`🔗 Looking for room ${roomCode}...`, 'calling');
-        
-        // Check if room exists in Firebase
-        const roomRef = database.ref(`rooms/${roomCode}`);
-        const snapshot = await roomRef.get();
-        const room = snapshot.val();
-        
-        if (room && room.hostId) {
-            remoteName = room.hostName;
-            remoteNameLabel.textContent = remoteName;
-            
-            // Register guest in room
-            await roomRef.update({
-                guestId: peer.id,
-                guestName: myName,
-                status: 'connecting'
-            });
-            
-            updateStatus(`📞 Connecting to ${remoteName}...`, 'calling');
-            makeCall(room.hostId, myName);
-        } else {
-            updateStatus(`❌ Room ${roomCode} not found`, 'offline');
-            alert(`Room ${roomCode} not found!\n\nMake sure your friend created a room and share the correct code.`);
-        }
+        updateStatus(`🔗 Connecting...`, 'calling');
+        makeCall(hostId, guestName);
     }
     
     function makeCall(remotePeerId, callerName) {
         if (!localStream || !peer) return;
         
-        if (currentCall) currentCall.close();
-        
-        const call = peer.call(remotePeerId, localStream, { metadata: { name: callerName } });
-        setupCallHandlers(call);
-        currentCall = call;
-    }
-    
-    function cleanupRoom() {
-        if (currentRoomCode && database) {
-            database.ref(`rooms/${currentRoomCode}`).remove();
-            if (roomListener) roomListener();
+        if (currentCall) {
+            currentCall.close();
         }
-        currentRoomCode = null;
-        roomDisplay.style.display = 'none';
+        
+        updateStatus(`📞 Calling...`, 'calling');
+        
+        const call = peer.call(remotePeerId, localStream, {
+            metadata: { name: callerName }
+        });
+        
+        // Setup data channel for chat
+        call.on('connection', (dataConn) => {
+            setupDataChannel(dataConn);
+        });
+        
+        call.on('stream', (remoteStream) => {
+            remoteVideo.srcObject = remoteStream;
+            remoteDot.style.background = '#48bb78';
+            isCallActive = true;
+            updateStatus(`🎥 Connected!`, 'online');
+            addMessage(`🎥 Connected to call!`, false, 'System');
+        });
+        
+        call.on('close', () => {
+            remoteVideo.srcObject = null;
+            remoteDot.style.background = '#ffc107';
+            remoteNameLabel.textContent = 'Disconnected';
+            isCallActive = false;
+            updateStatus('Call ended', 'online');
+            if (dataConnection) {
+                dataConnection.close();
+                dataConnection = null;
+            }
+            chatInput.disabled = true;
+            sendMsgBtn.disabled = true;
+        });
+        
+        call.on('error', (err) => {
+            console.error('Call error:', err);
+            updateStatus('Failed to connect', 'offline');
+            alert('Connection failed. Check Peer ID and try again.');
+        });
+        
+        currentCall = call;
     }
     
     function hangUp() {
@@ -768,14 +833,17 @@
             currentCall.close();
             currentCall = null;
         }
+        if (dataConnection) {
+            dataConnection.close();
+            dataConnection = null;
+        }
         remoteVideo.srcObject = null;
         remoteDot.style.background = '#ffc107';
         remoteNameLabel.textContent = 'Waiting...';
-        updateStatus('Call ended', 'online');
         isCallActive = false;
         chatInput.disabled = true;
-        sendBtn.disabled = true;
-        cleanupRoom();
+        sendMsgBtn.disabled = true;
+        updateStatus('Call ended', 'online');
     }
     
     function toggleMuteMic() {
@@ -784,6 +852,7 @@
             if (audioTrack) {
                 audioTrack.enabled = !audioTrack.enabled;
                 muteMicBtn.textContent = audioTrack.enabled ? '🎤 Mute Mic' : '🔊 Unmute';
+                muteMicBtn.style.background = audioTrack.enabled ? '#ffc107' : '#25d366';
             }
         }
     }
@@ -794,6 +863,7 @@
             if (videoTrack) {
                 videoTrack.enabled = !videoTrack.enabled;
                 muteCamBtn.textContent = videoTrack.enabled ? '📷 Mute Camera' : '🎥 Unmute';
+                muteCamBtn.style.background = videoTrack.enabled ? '#ffc107' : '#25d366';
             }
         }
     }
@@ -805,18 +875,18 @@
     hangupBtn.addEventListener('click', hangUp);
     createRoomBtn.addEventListener('click', createRoom);
     joinRoomBtn.addEventListener('click', joinRoom);
-    copyCodeBtn.addEventListener('click', copyRoomCode);
     fullscreenBtn.addEventListener('click', toggleFullscreen);
-    sendBtn.addEventListener('click', sendMessage);
+    sendMsgBtn.addEventListener('click', sendChatMessage);
     chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
+        if (e.key === 'Enter') sendChatMessage();
     });
     
+    // Initialize
     initPeer().catch(console.error);
     
-    console.log('%c🎥 EasyCall Ready!', 'color: #25d366; font-size: 16px');
-    console.log('%c✅ Just name + room code - Works anywhere!', 'color: #075e54; font-size: 14px');
-    console.log('%c✅ Camera keeps running when minimized', 'color: #17a2b8; font-size: 14px');
+    console.log('%c🎥 EasyCall Pro Ready!', 'color: #25d366; font-size: 16px');
+    console.log('%c✅ Camera stays on when minimized', 'color: #075e54; font-size: 12px');
+    console.log('%c✅ Chat feature enabled', 'color: #075e54; font-size: 12px');
 </script>
 </body>
 </html>
