@@ -3,118 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ClassLink - Smart Video Call & Chat</title>
+    <title>ConnectLive - Video Call & Chat | Full Duplex</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0B1120 0%, #19233C 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
+
         .container {
-            max-width: 1500px;
+            max-width: 1600px;
             margin: 0 auto;
-            background: rgba(255,255,255,0.96);
-            border-radius: 32px;
-            backdrop-filter: blur(2px);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
+            background: rgba(255,255,255,0.98);
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
             overflow: hidden;
-            transition: all 0.3s ease;
+            backdrop-filter: blur(2px);
         }
-        
+
+        /* Header */
         .header {
-            background: linear-gradient(120deg, #075e54, #128c7e);
-            padding: 18px 28px;
+            background: linear-gradient(120deg, #0F2B2D 0%, #1A4A4A 100%);
+            padding: 20px 32px;
             color: white;
         }
-        
+
         h1 {
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             letter-spacing: -0.3px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
-        
-        .subtitle {
-            font-size: 0.8rem;
-            opacity: 0.85;
-            margin-top: 4px;
+
+        .badge {
+            background: #25D366;
+            color: #0a2b1a;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 600;
         }
-        
+
+        /* Main Layout */
         .main-layout {
             display: flex;
-            gap: 20px;
-            padding: 24px;
+            gap: 24px;
+            padding: 28px;
             flex-wrap: wrap;
         }
-        
+
         .video-section {
             flex: 2.5;
-            min-width: 300px;
+            min-width: 320px;
         }
-        
+
         .chat-section {
             flex: 1.2;
-            min-width: 280px;
-            background: #fefcf5;
+            min-width: 300px;
+            background: #F8FAFE;
             border-radius: 28px;
             display: flex;
             flex-direction: column;
-            height: 560px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            border: 1px solid rgba(0,0,0,0.05);
+            height: 620px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.08);
         }
-        
+
+        /* Video Cards */
         .videos {
             display: flex;
-            gap: 20px;
-            margin-bottom: 22px;
+            gap: 24px;
+            margin-bottom: 24px;
             flex-wrap: wrap;
         }
-        
+
         .video-card {
             flex: 1;
-            min-width: 260px;
-            background: #111;
-            border-radius: 24px;
+            min-width: 280px;
+            background: #0A0A0E;
+            border-radius: 28px;
             overflow: hidden;
             position: relative;
-            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.15);
             transition: transform 0.2s;
-            border: 2px solid rgba(255,255,255,0.2);
         }
-        
-        .video-card:hover {
-            transform: scale(0.99);
-        }
-        
+
         video {
             width: 100%;
             height: auto;
             aspect-ratio: 16/9;
             object-fit: cover;
-            background: #1e1e2a;
+            background: #1a1a2a;
             display: block;
         }
-        
-        .label {
+
+        .video-label {
             position: absolute;
-            bottom: 14px;
-            left: 14px;
-            background: rgba(0,0,0,0.7);
+            bottom: 16px;
+            left: 16px;
+            background: rgba(0,0,0,0.75);
             backdrop-filter: blur(12px);
             color: white;
-            padding: 6px 14px;
+            padding: 6px 16px;
             border-radius: 40px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -122,120 +123,118 @@
             z-index: 10;
             font-family: monospace;
         }
-        
-        .dot {
+
+        .status-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #48bb78;
-            display: inline-block;
-            box-shadow: 0 0 5px #48bb78;
+            background: #48BB78;
+            box-shadow: 0 0 6px #48BB78;
+            transition: all 0.2s;
         }
-        
-        .dot-off {
-            background: #f59e0b;
+
+        .status-dot.inactive {
+            background: #F59E0B;
             box-shadow: none;
         }
-        
-        .dot-disconnected {
-            background: #ef4444;
-            animation: pulse-red 1.2s infinite;
+
+        .status-dot.disconnected {
+            background: #EF4444;
+            animation: pulseRed 1s infinite;
         }
-        
-        @keyframes pulse-red {
+
+        @keyframes pulseRed {
             0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; background: #ff6b6b; }
+            50% { opacity: 1; background: #FF6B6B; }
         }
-        
-        .pip-hint {
+
+        .pip-btn {
             position: absolute;
-            top: 14px;
-            right: 14px;
+            top: 16px;
+            right: 16px;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(8px);
-            color: white;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 30px;
             font-size: 11px;
             cursor: pointer;
             z-index: 10;
+            color: white;
             transition: 0.2s;
         }
-        
-        .pip-hint:hover {
-            background: #075e54;
+
+        .pip-btn:hover {
+            background: #075E54;
         }
-        
+
+        /* Controls */
         .controls {
             display: flex;
             gap: 12px;
             justify-content: center;
-            margin: 5px 0 12px;
+            margin-top: 8px;
             flex-wrap: wrap;
         }
-        
+
         button {
-            padding: 10px 18px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 50px;
+            border-radius: 60px;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             font-family: inherit;
-            background: #f1f5f9;
-            color: #1e293b;
         }
-        
+
         button:active {
             transform: scale(0.96);
         }
-        
-        .btn-primary { background: #075e54; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-        .btn-success { background: #25d366; color: #1a2a1f; }
-        .btn-danger { background: #dc2626; color: white; }
-        .btn-warning { background: #f59e0b; color: #2d1f00; }
-        .btn-info { background: #3b82f6; color: white; }
-        .btn-outline { background: transparent; border: 1px solid #cbd5e1; }
-        
-        .status-panel {
-            padding: 10px 16px;
+
+        .btn-primary { background: #075E54; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .btn-success { background: #25D366; color: #1A3A1A; }
+        .btn-danger { background: #DC2626; color: white; }
+        .btn-warning { background: #F59E0B; color: #2D1F00; }
+        .btn-info { background: #3B82F6; color: white; }
+        .btn-secondary { background: #64748B; color: white; }
+
+        /* Status Panel */
+        .status-area {
+            margin: 12px 0 0 0;
+            padding: 10px 18px;
             border-radius: 60px;
-            margin: 10px 0;
             text-align: center;
             font-weight: 600;
             font-size: 13px;
-            background: #f8fafc;
-            display: inline-block;
-            width: auto;
+            background: #F1F5F9;
         }
-        
-        .status-online { background: #dcfce7; color: #166534; border-left: 4px solid #22c55e; }
-        .status-offline { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
-        .status-waiting { background: #fef9c3; color: #854d0e; border-left: 4px solid #eab308; }
-        .status-calling { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
-        
+
+        .connected { background: #DCFCE7; color: #166534; border-left: 4px solid #22C55E; }
+        .disconnected { background: #FEE2E2; color: #991B1B; border-left: 4px solid #EF4444; }
+        .waiting { background: #FEF9C3; color: #854D0E; border-left: 4px solid #EAB308; }
+        .calling { background: #DBEAFE; color: #1E40AF; border-left: 4px solid #3B82F6; }
+
+        /* Chat */
         .chat-header {
             padding: 16px 20px;
-            background: #075e54;
+            background: #075E54;
             color: white;
             border-radius: 28px 28px 0 0;
             font-weight: 700;
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
-        
-        .chat-status-badge {
-            font-size: 11px;
+
+        .chat-badge {
             background: rgba(255,255,255,0.25);
             padding: 4px 12px;
             border-radius: 50px;
+            font-size: 11px;
         }
-        
+
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -243,597 +242,597 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            background: #fffaf2;
+            background: #FFFFFF;
         }
-        
+
         .message {
             padding: 8px 14px;
             border-radius: 20px;
-            max-width: 88%;
+            max-width: 85%;
             word-wrap: break-word;
             font-size: 13px;
         }
-        
+
         .message-mine {
-            background: #dcf8c6;
+            background: #DCF8C6;
             align-self: flex-end;
-            color: #075e54;
+            color: #075E54;
             border-bottom-right-radius: 4px;
         }
-        
+
         .message-theirs {
-            background: white;
+            background: #F1F3F5;
             align-self: flex-start;
-            border: 1px solid #e2e8f0;
             border-bottom-left-radius: 4px;
         }
-        
+
         .message-system {
-            background: #e9ecef;
+            background: #E9ECEF;
             align-self: center;
-            color: #2c3e66;
+            color: #2C3E66;
             font-size: 10px;
-            max-width: 95%;
+            max-width: 90%;
             text-align: center;
             font-style: italic;
         }
-        
+
         .message-name {
             font-size: 10px;
             font-weight: 800;
             margin-bottom: 3px;
-            color: #0b5e4b;
+            color: #0B5E4B;
         }
-        
+
         .chat-input-area {
             padding: 14px;
-            border-top: 1px solid #e9e5dd;
+            border-top: 1px solid #E2E8F0;
             display: flex;
             gap: 10px;
             background: white;
             border-radius: 0 0 28px 28px;
         }
-        
+
         .chat-input {
             flex: 1;
             padding: 10px 16px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #CBD5E1;
             border-radius: 30px;
             font-size: 13px;
             outline: none;
         }
-        
-        .send-btn {
-            background: #25d366;
-            color: white;
-            padding: 8px 20px;
+
+        .chat-input:focus {
+            border-color: #25D366;
         }
-        
+
+        /* Link panels */
         .create-card, .join-panel {
-            background: #fef9f0;
+            background: #F8FAFE;
             border-radius: 28px;
-            padding: 20px 24px;
-            margin: 10px 24px 24px 24px;
-            border: 1px solid #e9e0d0;
+            padding: 20px 28px;
+            margin: 8px 28px 28px 28px;
+            border: 1px solid #E2E8F0;
         }
-        
+
         .invite-link {
-            background: #ffffff;
+            background: white;
             padding: 14px;
             border-radius: 18px;
             word-break: break-all;
             font-family: monospace;
             font-size: 13px;
-            border: 2px solid #25d366;
+            border: 2px solid #25D366;
             cursor: pointer;
             margin: 12px 0;
         }
-        
-        .peer-warning {
-            background: #ffedd5;
+
+        .name-input {
+            padding: 12px;
+            font-size: 15px;
+            border: 2px solid #E2E8F0;
+            border-radius: 60px;
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+        }
+
+        .alert-banner {
+            background: #FEF3C7;
             border-radius: 20px;
-            padding: 8px 18px;
-            font-size: 12px;
+            padding: 10px 18px;
+            margin: 16px 24px;
+            font-size: 13px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 12px;
-            margin-top: 12px;
             flex-wrap: wrap;
         }
-        
+
         .hidden {
             display: none;
         }
-        
-        @media (max-width: 780px) {
+
+        @media (max-width: 800px) {
             .main-layout { flex-direction: column; }
-            .chat-section { height: 400px; }
-            .controls button { padding: 6px 12px; font-size: 11px; }
-        }
-        
-        .btn-icon {
-            background: #334155;
-            color: white;
-        }
-        
-        .glowing {
-            box-shadow: 0 0 0 2px #25d366;
+            .chat-section { height: 420px; }
         }
     </style>
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>📡 ClassLink · Smart Presence</h1>
-        <div class="subtitle">Real-time video & chat · Auto-reconnect awareness</div>
+        <h1>🔗 ConnectLive <span class="badge">WebRTC · Full Duplex</span></h1>
+        <div style="font-size: 0.8rem; margin-top: 6px;">One-click video calls + real-time chat | Auto peer detection</div>
     </div>
-    
+
     <div class="main-layout">
         <div class="video-section">
             <div class="videos">
                 <div class="video-card">
                     <video id="localVideo" autoplay playsinline muted></video>
-                    <div class="label"><span class="dot" id="localDot"></span> 📷 <span id="myNameLabel">You</span></div>
-                    <div class="pip-hint" onclick="togglePictureInPicture('localVideo')">🖼️ PiP</div>
+                    <div class="video-label"><span class="status-dot" id="localDot"></span> 📷 <span id="myNameSpan">You</span></div>
+                    <div class="pip-btn" onclick="togglePiP('localVideo')">🖼️ PiP</div>
                 </div>
-                <div class="video-card" id="remoteCard">
+                <div class="video-card">
                     <video id="remoteVideo" autoplay playsinline></video>
-                    <div class="label"><span class="dot dot-off" id="remoteDot"></span> 👤 <span id="remoteNameLabel">Waiting...</span></div>
-                    <div class="pip-hint" onclick="togglePictureInPicture('remoteVideo')">🖼️ PiP</div>
+                    <div class="video-label"><span class="status-dot disconnected" id="remoteDot"></span> 👤 <span id="remoteNameSpan">Awaiting peer</span></div>
+                    <div class="pip-btn" onclick="togglePiP('remoteVideo')">🖼️ PiP</div>
                 </div>
             </div>
-            
+
             <div class="controls">
-                <button id="startCamBtn" class="btn-primary">🎥 Start Camera</button>
-                <button id="muteMicBtn" class="btn-warning" disabled>🎤 Mute Mic</button>
-                <button id="muteCamBtn" class="btn-warning" disabled>📷 Mute Cam</button>
-                <button id="hangupBtn" class="btn-danger" disabled>❌ End Call</button>
+                <button id="startCamBtn" class="btn-primary">🎥 Enable Camera</button>
+                <button id="muteMicBtn" class="btn-warning" disabled>🎤 Mute</button>
+                <button id="muteVidBtn" class="btn-warning" disabled>📷 Mute Video</button>
+                <button id="hangupBtn" class="btn-danger" disabled>🔴 End Call</button>
                 <button id="fullscreenBtn" class="btn-info">🖥️ Fullscreen</button>
             </div>
-            <div id="connectionWatch" class="peer-warning hidden">
-                ⚠️ <span id="watchMsg">Peer connection lost — remote may have left.</span>
-                <button id="resetCallBtn" class="btn-primary" style="padding: 5px 12px;">🔄 Reset & New Link</button>
-            </div>
         </div>
-        
+
         <div class="chat-section">
             <div class="chat-header">
-                💬 Live Chat
-                <span id="chatStatusBadge" class="chat-status-badge">🔌 Not ready</span>
+                💬 Session Chat
+                <span id="chatStateBadge" class="chat-badge">⚡ Not linked</span>
             </div>
             <div class="chat-messages" id="chatMessages">
-                <div class="message message-system">✨ Start camera & share link to begin secure chat</div>
+                <div class="message message-system">✨ Welcome! Enable camera and create/share a link to connect</div>
             </div>
             <div class="chat-input-area">
-                <input type="text" id="chatInput" class="chat-input" placeholder="Type message..." disabled>
-                <button id="sendMsgBtn" class="send-btn" disabled>Send</button>
+                <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." disabled>
+                <button id="sendMsgBtn" class="btn-success" disabled>Send</button>
             </div>
         </div>
     </div>
-    
-    <div id="globalStatus" class="status-panel status-offline" style="margin: 0 24px 16px 24px;">⚡ Waiting for camera & connection</div>
-    
-    <div id="hostSection" class="create-card">
-        <h3>🏫 Create Session (Teacher/Host)</h3>
-        <p style="margin: 8px 0 12px;">Generate a secure invite link — student will join instantly</p>
-        <button id="createLinkBtn" class="btn-success">🔗 Generate Invite Link</button>
-        <div id="linkDisplay" style="display: none; margin-top: 18px;">
-            <div class="invite-link" id="inviteLink" onclick="copyInviteLink()">Loading...</div>
-            <button id="copyLinkBtn" class="btn-primary">📋 Copy Link</button>
+
+    <div id="globalStatus" class="status-area waiting" style="margin: 0 28px 12px 28px;">📡 Initializing...</div>
+
+    <div id="hostPanel" class="create-card">
+        <h3>👩‍🏫 Host / Teacher</h3>
+        <p style="margin: 8px 0;">Generate a secure invite link — share with one participant</p>
+        <button id="createLinkButton" class="btn-success">🔗 Generate Invitation Link</button>
+        <div id="linkContainer" style="display: none; margin-top: 16px;">
+            <div class="invite-link" id="inviteLinkText" onclick="copyLink()">Click to copy</div>
+            <button id="copyLinkButton" class="btn-primary">📋 Copy</button>
         </div>
     </div>
-    
-    <div id="guestSection" class="join-panel hidden">
-        <h3>📖 Join Classroom (Student)</h3>
-        <input type="text" id="guestNameInput" class="name-input" placeholder="Your name" maxlength="20" style="padding:12px; width:100%; border-radius:60px; border:1px solid #ccc;">
-        <button id="joinWithLinkBtn" class="btn-success" style="margin-top: 12px;">🎥 Join Call</button>
+
+    <div id="guestPanel" class="join-panel hidden">
+        <h3>🧑‍🎓 Join as Student / Guest</h3>
+        <input type="text" id="guestNameField" class="name-input" placeholder="Your display name" maxlength="20">
+        <button id="joinCallBtn" class="btn-success" style="margin-top: 14px;">🎥 Join Call Now</button>
+    </div>
+
+    <div id="disconnectAlert" class="alert-banner hidden">
+        ⚠️ <span id="alertMessage">Peer has left the session</span>
+        <button id="resetSessionBtn" class="btn-secondary" style="padding: 6px 14px;">🔄 Reset & New Link</button>
     </div>
 </div>
 
 <script>
-    // ======================= GLOBALS =======================
+    // ------------------- GLOBALS -------------------
     let localStream = null;
-    let peer = null;
-    let currentCall = null;
-    let myPeerId = null;
-    let myName = "Teacher";
-    let remoteName = "Student";
+    let peerInstance = null;
+    let activeCall = null;
+    let myPeerID = null;
+    let myDisplayName = "Host";
+    let remoteDisplayName = "Guest";
     let dataChannel = null;
-    let isCallActive = false;
-    let reconnectTimer = null;
-    let remoteActiveFlag = true;
-    
+    let callActive = false;
+    let reconnectTimeout = null;
+
     // DOM elements
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
-    const globalStatus = document.getElementById('globalStatus');
-    const myNameLabel = document.getElementById('myNameLabel');
-    const remoteNameLabel = document.getElementById('remoteNameLabel');
+    const globalStatusDiv = document.getElementById('globalStatus');
+    const myNameSpan = document.getElementById('myNameSpan');
+    const remoteNameSpan = document.getElementById('remoteNameSpan');
+    const localDot = document.getElementById('localDot');
+    const remoteDot = document.getElementById('remoteDot');
     const startCamBtn = document.getElementById('startCamBtn');
     const muteMicBtn = document.getElementById('muteMicBtn');
-    const muteCamBtn = document.getElementById('muteCamBtn');
+    const muteVidBtn = document.getElementById('muteVidBtn');
     const hangupBtn = document.getElementById('hangupBtn');
-    const createLinkBtn = document.getElementById('createLinkBtn');
-    const linkDisplay = document.getElementById('linkDisplay');
-    const inviteLinkDiv = document.getElementById('inviteLink');
-    const copyLinkBtn = document.getElementById('copyLinkBtn');
-    const hostSection = document.getElementById('hostSection');
-    const guestSection = document.getElementById('guestSection');
-    const guestNameInput = document.getElementById('guestNameInput');
-    const joinWithLinkBtn = document.getElementById('joinWithLinkBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const createLinkButton = document.getElementById('createLinkButton');
+    const linkContainer = document.getElementById('linkContainer');
+    const inviteLinkText = document.getElementById('inviteLinkText');
+    const copyLinkButton = document.getElementById('copyLinkButton');
+    const hostPanel = document.getElementById('hostPanel');
+    const guestPanel = document.getElementById('guestPanel');
+    const guestNameField = document.getElementById('guestNameField');
+    const joinCallBtn = document.getElementById('joinCallBtn');
     const chatMessages = document.getElementById('chatMessages');
     const chatInput = document.getElementById('chatInput');
     const sendMsgBtn = document.getElementById('sendMsgBtn');
-    const remoteDot = document.getElementById('remoteDot');
-    const localDot = document.getElementById('localDot');
-    const chatStatusBadge = document.getElementById('chatStatusBadge');
-    const connectionWatchDiv = document.getElementById('connectionWatch');
-    const watchMsgSpan = document.getElementById('watchMsg');
-    const resetCallBtn = document.getElementById('resetCallBtn');
-    
-    // Helper: status & chat
-    function setStatus(message, type = 'offline') {
-        globalStatus.textContent = message;
-        globalStatus.className = `status-panel status-${type}`;
+    const chatStateBadge = document.getElementById('chatStateBadge');
+    const disconnectAlert = document.getElementById('disconnectAlert');
+    const alertMessageSpan = document.getElementById('alertMessage');
+    const resetSessionBtn = document.getElementById('resetSessionBtn');
+
+    // Helper: update global UI status
+    function setGlobalStatus(text, type = 'waiting') {
+        globalStatusDiv.textContent = text;
+        globalStatusDiv.className = `status-area ${type}`;
     }
-    
-    function updateChatUI(connected) {
-        if (connected && isCallActive) {
-            chatStatusBadge.innerHTML = '✅ Chat ready';
-            chatStatusBadge.style.background = '#48bb78';
-            chatInput.disabled = false;
-            sendMsgBtn.disabled = false;
-        } else {
-            chatStatusBadge.innerHTML = '🔌 No peer';
-            chatStatusBadge.style.background = 'rgba(255,255,255,0.3)';
-            chatInput.disabled = true;
-            sendMsgBtn.disabled = true;
-        }
-    }
-    
-    function addSystemMessage(text) {
+
+    // Chat system
+    function addSystemMsg(text) {
         const msgDiv = document.createElement('div');
         msgDiv.className = 'message message-system';
-        msgDiv.innerHTML = `<div class="message-text">📢 ${text}</div>`;
+        msgDiv.innerHTML = `<div class="message-text">🔔 ${text}</div>`;
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
-    
-    function addChatMessage(text, isMine = false, senderName = '') {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isMine ? 'message-mine' : 'message-theirs'}`;
-        if (!isMine && senderName) {
+
+    function addChatMsg(text, isMine = false, sender = '') {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isMine ? 'message-mine' : 'message-theirs'}`;
+        if (!isMine && sender) {
             const nameSpan = document.createElement('div');
             nameSpan.className = 'message-name';
-            nameSpan.textContent = senderName;
-            messageDiv.appendChild(nameSpan);
+            nameSpan.textContent = sender;
+            msgDiv.appendChild(nameSpan);
         }
         const textSpan = document.createElement('div');
         textSpan.className = 'message-text';
         textSpan.textContent = text;
         const timeSpan = document.createElement('div');
-        timeSpan.className = 'message-time';
+        timeSpan.style.fontSize = '9px';
+        timeSpan.style.color = '#999';
+        timeSpan.style.marginTop = '4px';
         timeSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        messageDiv.appendChild(textSpan);
-        messageDiv.appendChild(timeSpan);
-        chatMessages.appendChild(messageDiv);
+        msgDiv.appendChild(textSpan);
+        msgDiv.appendChild(timeSpan);
+        chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
-    
+
+    function updateChatConnectionStatus(connected) {
+        if (connected && callActive && dataChannel && dataChannel.readyState === 'open') {
+            chatStateBadge.innerHTML = '✅ Chat Active';
+            chatStateBadge.style.background = '#48BB78';
+            chatInput.disabled = false;
+            sendMsgBtn.disabled = false;
+        } else {
+            chatStateBadge.innerHTML = '🔌 No Peer Chat';
+            chatStateBadge.style.background = 'rgba(0,0,0,0.3)';
+            chatInput.disabled = true;
+            sendMsgBtn.disabled = true;
+        }
+    }
+
     function sendChatMessage() {
-        if (!isCallActive || !dataChannel || dataChannel.readyState !== 'open') {
-            addSystemMessage('⚠️ Chat not connected. Peer might be offline.');
+        if (!callActive || !dataChannel || dataChannel.readyState !== 'open') {
+            addSystemMsg('⚠️ Chat connection not ready yet. Wait for peer connection.');
             return;
         }
-        const msg = chatInput.value.trim();
-        if (!msg) return;
-        dataChannel.send(JSON.stringify({ type: 'chat', message: msg, sender: myName, time: Date.now() }));
-        addChatMessage(msg, true);
+        const message = chatInput.value.trim();
+        if (!message) return;
+        const payload = { type: 'chat', text: message, sender: myDisplayName, timestamp: Date.now() };
+        dataChannel.send(JSON.stringify(payload));
+        addChatMsg(message, true);
         chatInput.value = '';
     }
-    
-    // data channel setup (fixed)
-    function setupDataChannel(connection) {
-        if (dataChannel) {
-            try { dataChannel.close(); } catch(e) {}
-        }
-        dataChannel = connection.createDataChannel('classchat');
-        attachDataChannelEvents(dataChannel);
-    }
-    
-    function attachDataChannelEvents(dc) {
-        dc.onopen = () => {
-            console.log('✅ Data channel OPEN');
-            updateChatUI(true);
-            addSystemMessage('💬 Chat active! Type freely.');
+
+    // Data channel handler
+    function initDataChannel(channel) {
+        dataChannel = channel;
+        dataChannel.onopen = () => {
+            console.log('✅ Data channel opened');
+            updateChatConnectionStatus(true);
+            addSystemMsg('💬 Chat channel established!');
         };
-        dc.onclose = () => {
+        dataChannel.onclose = () => {
             console.log('Data channel closed');
-            updateChatUI(false);
-            addSystemMessage('💬 Chat connection lost');
+            updateChatConnectionStatus(false);
+            addSystemMsg('Chat channel closed');
         };
-        dc.onerror = (err) => console.error('DataChannel err', err);
-        dc.onmessage = (event) => {
+        dataChannel.onerror = (err) => console.error('DC error:', err);
+        dataChannel.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === 'chat') {
-                    addChatMessage(data.message, false, data.sender || remoteName);
+                    addChatMsg(data.text, false, data.sender || remoteDisplayName);
                 } else if (data.type === 'ping') {
-                    if (dc.readyState === 'open') dc.send(JSON.stringify({ type: 'pong' }));
+                    if (dataChannel && dataChannel.readyState === 'open')
+                        dataChannel.send(JSON.stringify({ type: 'pong' }));
                 }
             } catch(e) { console.warn(e); }
         };
     }
-    
-    function handleIncomingDataChannel(event) {
-        dataChannel = event.channel;
-        attachDataChannelEvents(dataChannel);
+
+    function createDataChannelForCall(call) {
+        const dc = call.createDataChannel('main-chat');
+        initDataChannel(dc);
     }
-    
-    // Peer connection end: CLEAN + Notify teacher
-    function fullCleanupCall(notifyRemoteLeft = true) {
-        if (currentCall) {
-            try { currentCall.close(); } catch(e){}
-            currentCall = null;
+
+    function handleIncomingDataChannel(event) {
+        initDataChannel(event.channel);
+    }
+
+    // Cleanup call fully (peer left event)
+    function terminateCall(notifyLeft = true) {
+        if (activeCall) {
+            try { activeCall.close(); } catch(e) {}
+            activeCall = null;
         }
         if (dataChannel) {
-            try { dataChannel.close(); } catch(e){}
+            try { dataChannel.close(); } catch(e) {}
             dataChannel = null;
         }
         if (remoteVideo.srcObject) {
             remoteVideo.srcObject = null;
         }
-        remoteDot.className = 'dot dot-off';
-        remoteDot.classList.add('dot-off');
-        remoteNameLabel.textContent = 'Disconnected';
-        isCallActive = false;
-        updateChatUI(false);
-        
-        if (notifyRemoteLeft) {
-            addSystemMessage('🔴 Remote user has left the call.');
-            setStatus('Call ended — remote peer disconnected', 'offline');
-            connectionWatchDiv.classList.remove('hidden');
-            watchMsgSpan.innerHTML = '⚠️ The student closed the window or left. As host, you can create a new link.';
+        callActive = false;
+        remoteDot.className = 'status-dot disconnected';
+        remoteNameSpan.textContent = 'Disconnected';
+        updateChatConnectionStatus(false);
+        if (notifyLeft) {
+            addSystemMsg('🔴 Remote participant has left the call.');
+            setGlobalStatus('Call ended — peer disconnected', 'disconnected');
+            alertMessageSpan.innerText = 'The other person left the session (closed tab or network issue).';
+            disconnectAlert.classList.remove('hidden');
         } else {
-            connectionWatchDiv.classList.add('hidden');
+            disconnectAlert.classList.add('hidden');
         }
     }
-    
-    // handle call end (detection)
-    function monitorCallHealth() {
-        if (!currentCall) return;
-        const checkInterval = setInterval(() => {
-            if (!isCallActive && currentCall) {
-                clearInterval(checkInterval);
-                return;
-            }
-            if (currentCall && currentCall.peerConnection && currentCall.peerConnection.connectionState === 'closed') {
-                fullCleanupCall(true);
-                clearInterval(checkInterval);
-            } else if (currentCall && !remoteActiveFlag && isCallActive) {
-                fullCleanupCall(true);
-                clearInterval(checkInterval);
-            }
-        }, 3000);
-    }
-    
-    // START CAMERA
-    async function startCamera() {
+
+    // Start camera
+    async function enableCamera() {
         try {
-            setStatus('Requesting camera/mic...', 'waiting');
-            const constraints = { video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 25 } }, audio: { echoCancellation: true, noiseSuppression: true } };
+            setGlobalStatus('Requesting camera & mic...', 'waiting');
+            const constraints = { video: { width: { ideal: 720 }, height: { ideal: 480 } }, audio: { echoCancellation: true, noiseSuppression: true } };
             localStream = await navigator.mediaDevices.getUserMedia(constraints);
             localVideo.srcObject = localStream;
-            localDot.style.background = '#48bb78';
-            setStatus('✅ Camera ready! Create a link', 'online');
+            localDot.className = 'status-dot';
+            setGlobalStatus('Camera ready. Generate or join a call.', 'connected');
             startCamBtn.disabled = true;
-            startCamBtn.textContent = '✅ Camera Ready';
+            startCamBtn.textContent = '✅ Camera Active';
             muteMicBtn.disabled = false;
-            muteCamBtn.disabled = false;
+            muteVidBtn.disabled = false;
             hangupBtn.disabled = false;
             return true;
         } catch (err) {
-            setStatus('❌ Camera/Mic denied', 'offline');
-            alert('Allow camera permissions to call');
+            setGlobalStatus('Camera/Mic access denied', 'disconnected');
+            alert('Please allow camera and microphone to use the call feature.');
             return false;
         }
     }
-    
+
+    // Initialize PeerJS
     async function initPeer() {
         return new Promise((resolve, reject) => {
-            if (peer && !peer.destroyed) {
-                resolve(myPeerId);
+            if (peerInstance && !peerInstance.destroyed) {
+                resolve(myPeerID);
                 return;
             }
-            peer = new Peer();
-            peer.on('open', (id) => {
-                myPeerId = id;
-                setStatus('✅ Ready! Create invite link', 'online');
+            peerInstance = new Peer();
+            peerInstance.on('open', (id) => {
+                myPeerID = id;
+                setGlobalStatus('Ready: create/share link', 'connected');
                 resolve(id);
             });
-            peer.on('error', (err) => { console.error(err); reject(err); });
-            peer.on('call', (incomingCall) => {
-                if (!localStream) { incomingCall.close(); return; }
-                const callerName = incomingCall.metadata?.name || 'Student';
-                remoteName = callerName;
-                remoteNameLabel.textContent = remoteName;
-                setStatus(`📞 Incoming from ${remoteName}`, 'calling');
-                incomingCall.ondatachannel = handleIncomingDataChannel;
-                currentCall = incomingCall;
-                currentCall.answer(localStream);
-                currentCall.on('stream', (remoteStream) => {
+            peerInstance.on('error', (err) => {
+                console.error('Peer error:', err);
+                reject(err);
+            });
+            peerInstance.on('call', (incoming) => {
+                if (!localStream) {
+                    incoming.close();
+                    addSystemMsg('Incoming call missed: no camera stream');
+                    return;
+                }
+                const callerMeta = incoming.metadata?.name || 'Peer';
+                remoteDisplayName = callerMeta;
+                remoteNameSpan.textContent = remoteDisplayName;
+                setGlobalStatus(`📞 Incoming from ${remoteDisplayName}`, 'calling');
+                incoming.ondatachannel = handleIncomingDataChannel;
+                activeCall = incoming;
+                activeCall.answer(localStream);
+                activeCall.on('stream', (remoteStream) => {
                     remoteVideo.srcObject = remoteStream;
-                    remoteDot.className = 'dot';
-                    remoteDot.classList.remove('dot-off');
-                    isCallActive = true;
-                    remoteActiveFlag = true;
-                    connectionWatchDiv.classList.add('hidden');
-                    setStatus(`🎥 Connected with ${remoteName}`, 'online');
-                    addSystemMessage(`✅ ${remoteName} joined the session!`);
-                    updateChatUI(true);
-                    monitorCallHealth();
+                    remoteDot.className = 'status-dot';
+                    remoteDot.classList.remove('disconnected');
+                    callActive = true;
+                    setGlobalStatus(`🎥 Connected with ${remoteDisplayName}`, 'connected');
+                    addSystemMsg(`✅ ${remoteDisplayName} joined the session.`);
+                    updateChatConnectionStatus(true);
+                    disconnectAlert.classList.add('hidden');
                 });
-                currentCall.on('close', () => {
-                    fullCleanupCall(true);
+                activeCall.on('close', () => {
+                    terminateCall(true);
                 });
             });
         });
     }
-    
-    // CREATE LINK (host)
-    async function createInviteLink() {
-        if (!localStream) { const started = await startCamera(); if (!started) return; }
-        if (!peer || peer.destroyed) await initPeer();
-        const hostName = prompt('Enter your name (Teacher/Host):', 'Professor');
-        if (hostName && hostName.trim()) myName = hostName.trim();
-        myNameLabel.textContent = myName;
-        const roomSeed = Math.random().toString(36).substring(2, 12);
-        const inviteUrl = `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(myPeerId)}&room=${roomSeed}`;
-        inviteLinkDiv.textContent = inviteUrl;
-        linkDisplay.style.display = 'block';
-        setStatus('🔗 Link created! Share with student', 'online');
-        addSystemMessage(`📎 Your personal link ready. Student can join anytime.`);
-        connectionWatchDiv.classList.add('hidden');
-        if (currentCall) fullCleanupCall(false);
+
+    // HOST: generate link
+    async function generateInvite() {
+        if (!localStream) {
+            const camStarted = await enableCamera();
+            if (!camStarted) return;
+        }
+        if (!peerInstance || peerInstance.destroyed) await initPeer();
+        const hostName = prompt('Your display name (Teacher/Host):', 'Teacher');
+        if (hostName && hostName.trim()) {
+            myDisplayName = hostName.trim();
+            myNameSpan.textContent = myDisplayName;
+        }
+        const roomCode = Math.random().toString(36).substring(2, 12);
+        const fullLink = `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(myPeerID)}&room=${roomCode}`;
+        inviteLinkText.textContent = fullLink;
+        linkContainer.style.display = 'block';
+        setGlobalStatus('Invite link ready — share with student', 'connected');
+        addSystemMsg('📎 Invitation link created! Share it to start call.');
+        if (activeCall) terminateCall(false);
+        disconnectAlert.classList.add('hidden');
     }
-    
-    function copyInviteLink() {
-        const linkText = inviteLinkDiv.textContent;
-        navigator.clipboard.writeText(linkText);
-        addSystemMessage('📋 Invite link copied to clipboard');
+
+    function copyLink() {
+        const link = inviteLinkText.textContent;
+        navigator.clipboard.writeText(link);
+        addSystemMsg('📋 Link copied to clipboard');
     }
-    
-    async function autoJoinFromLink() {
+
+    // Auto join from URL param
+    async function autoParseJoin() {
         const params = new URLSearchParams(window.location.search);
-        const hostPeerId = params.get('join');
+        const hostId = params.get('join');
         const room = params.get('room');
-        if (hostPeerId && room) {
-            hostSection.classList.add('hidden');
-            guestSection.classList.remove('hidden');
-            await startCamera();
+        if (hostId && room) {
+            hostPanel.classList.add('hidden');
+            guestPanel.classList.remove('hidden');
+            await enableCamera();
             await initPeer();
-            window.hostPeerIdToJoin = hostPeerId;
-            setStatus('✏️ Enter your name & join', 'waiting');
+            window.targetHostId = hostId;
+            setGlobalStatus('Enter name & click join', 'waiting');
         }
     }
-    
-    async function joinViaLink() {
-        const guestNameVal = guestNameInput.value.trim();
-        const hostId = window.hostPeerIdToJoin;
-        if (!guestNameVal) { alert('Please enter your name'); return; }
-        if (!hostId) { alert('Invalid link'); return; }
-        if (!localStream) await startCamera();
-        if (!peer) await initPeer();
-        myName = guestNameVal;
-        myNameLabel.textContent = myName;
-        remoteNameLabel.textContent = 'Host';
-        setStatus(`📡 Connecting to host...`, 'calling');
-        const call = peer.call(hostId, localStream, { metadata: { name: myName } });
-        setupDataChannel(call);
+
+    async function joinAsGuest() {
+        const guestName = guestNameField.value.trim();
+        const targetHost = window.targetHostId;
+        if (!guestName) { alert('Please enter your name'); return; }
+        if (!targetHost) { alert('Invalid session link'); return; }
+        if (!localStream) await enableCamera();
+        if (!peerInstance) await initPeer();
+
+        myDisplayName = guestName;
+        myNameSpan.textContent = myDisplayName;
+        remoteNameSpan.textContent = 'Host';
+        setGlobalStatus('Connecting to host...', 'calling');
+
+        const call = peerInstance.call(targetHost, localStream, { metadata: { name: myDisplayName } });
+        // Create data channel (caller side)
+        const dc = call.createDataChannel('main-chat');
+        initDataChannel(dc);
+        
         call.on('stream', (remoteStream) => {
             remoteVideo.srcObject = remoteStream;
-            remoteDot.className = 'dot';
-            remoteDot.classList.remove('dot-off');
-            isCallActive = true;
-            remoteActiveFlag = true;
-            setStatus(`🎥 Live with Host!`, 'online');
-            addSystemMessage(`🎉 Connected to classroom!`);
-            updateChatUI(true);
-            monitorCallHealth();
-            guestSection.classList.add('hidden');
-            hostSection.classList.add('hidden');
+            remoteDot.className = 'status-dot';
+            remoteDot.classList.remove('disconnected');
+            callActive = true;
+            setGlobalStatus(`🎥 Connected with Host`, 'connected');
+            addSystemMsg(`🎉 You are now in the call!`);
+            updateChatConnectionStatus(true);
+            guestPanel.classList.add('hidden');
+            disconnectAlert.classList.add('hidden');
         });
-        call.on('close', () => { fullCleanupCall(true); });
-        call.on('error', (err) => { setStatus('Connection failed', 'offline'); alert('Host may be offline. Create new link.'); });
-        currentCall = call;
+        call.on('close', () => {
+            terminateCall(true);
+        });
+        call.on('error', (err) => {
+            setGlobalStatus('Connection failed', 'disconnected');
+            alert('Could not connect. Ensure host is online and link is valid.');
+        });
+        activeCall = call;
     }
-    
-    function hangUp() {
-        if (currentCall) {
-            currentCall.close();
+
+    function hangupCurrentCall() {
+        if (activeCall) {
+            activeCall.close();
         }
-        fullCleanupCall(false);
-        setStatus('Call ended by you', 'online');
-        addSystemMessage('You ended the session');
-        connectionWatchDiv.classList.remove('hidden');
-        watchMsgSpan.innerHTML = 'Call finished. Create a new link to restart.';
+        terminateCall(false);
+        setGlobalStatus('Call ended by you', 'connected');
+        addSystemMsg('You ended the session');
+        disconnectAlert.classList.remove('hidden');
+        alertMessageSpan.innerText = 'Call finished. Generate a fresh invite link to restart.';
     }
-    
-    // Toggle mute & cam
-    function toggleMuteMic() {
+
+    function toggleMuteMicrophone() {
         if (localStream) {
             const audioTrack = localStream.getAudioTracks()[0];
             if (audioTrack) {
                 audioTrack.enabled = !audioTrack.enabled;
-                muteMicBtn.textContent = audioTrack.enabled ? '🎤 Mute Mic' : '🔊 Unmute';
-                muteMicBtn.style.background = audioTrack.enabled ? '#f59e0b' : '#25d366';
+                muteMicBtn.textContent = audioTrack.enabled ? '🎤 Mute' : '🔊 Unmute';
+                muteMicBtn.style.background = audioTrack.enabled ? '#F59E0B' : '#25D366';
             }
         }
     }
-    function toggleMuteCam() {
+
+    function toggleMuteVideo() {
         if (localStream) {
             const videoTrack = localStream.getVideoTracks()[0];
             if (videoTrack) {
                 videoTrack.enabled = !videoTrack.enabled;
-                muteCamBtn.textContent = videoTrack.enabled ? '📷 Mute Cam' : '🎥 Unmute';
-                localDot.style.background = videoTrack.enabled ? '#48bb78' : '#f59e0b';
+                muteVidBtn.textContent = videoTrack.enabled ? '📷 Mute Video' : '🎥 Show Video';
+                localDot.style.background = videoTrack.enabled ? '#48BB78' : '#F59E0B';
             }
         }
     }
-    
-    // reset link visibility & recover
-    function resetAndNewLink() {
-        if (currentCall) hangUp();
-        linkDisplay.style.display = 'none';
-        connectionWatchDiv.classList.add('hidden');
-        addSystemMessage('🔄 Reset complete. Generate a fresh invite link above.');
-        setStatus('Ready to create new link', 'online');
+
+    function resetAndRegenerate() {
+        if (activeCall) hangupCurrentCall();
+        linkContainer.style.display = 'none';
+        disconnectAlert.classList.add('hidden');
+        addSystemMsg('🔄 Session reset. You can create a new link.');
+        setGlobalStatus('Ready to create new call', 'connected');
     }
-    
-    window.togglePictureInPicture = async (id) => {
-        const vid = document.getElementById(id);
+
+    window.togglePiP = async (videoElementId) => {
+        const vid = document.getElementById(videoElementId);
         if (!vid.srcObject) return;
         try {
             if (document.pictureInPictureElement) await document.exitPictureInPicture();
             else await vid.requestPictureInPicture();
         } catch(e) {}
     };
-    function toggleFullscreen() {
+    
+    function toggleFullscreenMode() {
         const container = document.querySelector('.container');
         if (!document.fullscreenElement) container.requestFullscreen().catch(()=>{});
         else document.exitFullscreen();
     }
-    
-    // Event bindings
-    startCamBtn.addEventListener('click', startCamera);
-    muteMicBtn.addEventListener('click', toggleMuteMic);
-    muteCamBtn.addEventListener('click', toggleMuteCam);
-    hangupBtn.addEventListener('click', hangUp);
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
-    createLinkBtn.addEventListener('click', createInviteLink);
-    copyLinkBtn.addEventListener('click', copyInviteLink);
-    joinWithLinkBtn.addEventListener('click', joinViaLink);
-    sendMsgBtn.addEventListener('click', sendChatMessage);
-    chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage(); });
-    resetCallBtn.addEventListener('click', resetAndNewLink);
-    
-    // init
-    initPeer().catch(e => console.warn);
-    autoJoinFromLink();
-    
-    // periodic check: if dataChannel closed unexpectedly but call exists - handle remote drop
+
+    // periodic check if remote peer gone but connection state stalled
     setInterval(() => {
-        if (isCallActive && currentCall && (!dataChannel || dataChannel.readyState !== 'open')) {
-            if (currentCall.peerConnection && currentCall.peerConnection.connectionState === 'connected') {
-                // still connected but data channel dead? try renotify
-                console.log('Data channel lost but call alive? refreshing');
-            } else if (currentCall.peerConnection?.connectionState !== 'connected') {
-                fullCleanupCall(true);
+        if (callActive && activeCall && activeCall.peerConnection) {
+            const connState = activeCall.peerConnection.connectionState;
+            if (connState === 'closed' || connState === 'disconnected' || connState === 'failed') {
+                if (callActive) terminateCall(true);
             }
         }
-    }, 4000);
-    console.log('%c✅ ClassLink v2 - Fixed chat & student drop detection', 'color:#25d366; font-size:14px');
+    }, 3500);
+
+    // Event listeners
+    startCamBtn.addEventListener('click', enableCamera);
+    muteMicBtn.addEventListener('click', toggleMuteMicrophone);
+    muteVidBtn.addEventListener('click', toggleMuteVideo);
+    hangupBtn.addEventListener('click', hangupCurrentCall);
+    fullscreenBtn.addEventListener('click', toggleFullscreenMode);
+    createLinkButton.addEventListener('click', generateInvite);
+    copyLinkButton.addEventListener('click', copyLink);
+    joinCallBtn.addEventListener('click', joinAsGuest);
+    sendMsgBtn.addEventListener('click', sendChatMessage);
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+    resetSessionBtn.addEventListener('click', resetAndRegenerate);
+
+    // Initialize peer & auto join if needed
+    initPeer().catch(err => console.warn('Peer init warning:', err));
+    autoParseJoin();
+    addSystemMsg('🚀 System ready — start camera and generate link to begin');
 </script>
 </body>
 </html>
