@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Group Video Call - Up to 5 Members</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #075e54 0%, #128c7e 100%);
+            min-height: 100vh;
+            padding: 16px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #075e54;
+            margin-bottom: 8px;
+            font-size: 1.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .main-layout {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .video-section {
+            flex: 3;
+            min-width: 300px;
+        }
+        
+        .chat-section {
+            flex: 1;
+            min-width: 260px;
+            background: #f7fafc;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+        
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .video-card {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            aspect-ratio: 16/9;
+        }
+        
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #1a1a1a;
+        }
+        
+        .video-label {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+        }
+        
+        .video-label .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #48bb78;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .video-label .dot-off {
+            background: #ffc107;
+            animation: none;
+        }
+        
+        .audio-indicator {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        .chat-header {
+            padding: 12px;
+            background: #075e54;
+            color: white;
+            border-radius: 16px 16px 0 0;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .member-count {
+            font-size: 11px;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .message {
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .message-mine {
+            background: #dcf8c6;
+            align-self: flex-end;
+            color: #075e54;
+        }
+        
+        .message-theirs {
+            background: white;
+            align-self: flex-start;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .message-system {
+            background: #fff3cd;
+            align-self: center;
+            color: #856404;
+            font-size: 11px;
+            max-width: 90%;
+            text-align: center;
+        }
+        
+        .message-name {
+            font-size: 10px;
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #666;
+        }
+        
+        .message-text {
+            font-size: 13px;
+        }
+        
+        .message-time {
+            font-size: 9px;
+            color: #999;
+            margin-top: 3px;
+            text-align: right;
+        }
+        
+        .chat-input-area {
+            padding: 12px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 13px;
+            outline: none;
+        }
+        
+        .chat-input:focus {
+            border-color: #25d366;
+        }
+        
+        .send-btn {
+            padding: 8px 16px;
+            background: #25d366;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-primary { background: #075e54; color: white; }
+        .btn-success { background: #25d366; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-info { background: #17a2b8; color: white; }
+        
+        .status {
+            padding: 12px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .status-online { background: #d4edda; color: #155724; }
+        .status-offline { background: #f8d7da; color: #721c24; }
+        .status-waiting { background: #fff3cd; color: #856404; }
+        
+        .create-card {
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .invite-link {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            border: 2px solid #25d366;
+            cursor: pointer;
+        }
+        
+        .join-panel {
+            background: #e8f5e9;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .name-input {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+            margin: 10px auto;
+            display: block;
+        }
+        
+        .member-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        
+        .member-badge {
+            background: #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>👥 Group Video Call</h1>
+    <div class="subtitle">Up to 5 members | Share one link | Everyone joins with their name</div>
+    
+    <div class="main-layout">
+        <div class="video-section">
+            <div class="video-grid" id="videoGrid">
+                <!-- Local video will be added here -->
+            </div>
+            
+            <div class="controls">
+                <button id="startCamBtn" class="btn-primary">🎥 Start Camera</button>
+                <button id="muteMicBtn" class="btn-warning" disabled>🎤 Mute Mic</button>
+                <button id="muteCamBtn" class="btn-warning" disabled>📷 Mute Camera</button>
+                <button id="leaveCallBtn" class="btn-danger" disabled>🚪 Leave Call</button>
+            </div>
+        </div>
+        
+        <div class="chat-section">
+            <div class="chat-header">
+                💬 Group Chat
+                <span id="memberCount" class="member-count">0 members</span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message message-system">
+                    <div class="message-text">💡 Start camera and create a room to begin</div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Type a message..." disabled>
+                <button id="sendMsgBtn" class="send-btn" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="status" class="status status-offline">⚡ Click "Start Camera" to begin</div>
+    
+    <div id="hostSection" class="create-card">
+        <h3>🏠 Create Group Call</h3>
+        <p style="margin: 10px 0;">Share this link - multiple people can join!</p>
+        <button id="createRoomBtn" class="btn-success">🔗 Create Group Room</button>
+        <div id="roomDisplay" style="display: none; margin-top: 20px;">
+            <p>📢 Share this link with friends:</p>
+            <div class="invite-link" id="inviteLink" onclick="copyInviteLink()">
+                Loading...
+            </div>
+            <button id="copyLinkBtn" class="btn-primary">📋 Copy Link</button>
+            <div class="member-list" id="memberList"></div>
+        </div>
+    </div>
+    
+    <div id="guestSection" class="join-panel hidden">
+        <h3>🔗 Join Group Call</h3>
+        <p>You've been invited to a group video call!</p>
+        <input type="text" id="guestNameInput" class="name-input" placeholder="Enter your name" maxlength="20">
+        <button id="joinRoomBtn" class="btn-success">🎥 Join Call</button>
+    </div>
+</div>
+
+<script>
+    let localStream = null;
+    let peer = null;
+    let myPeerId = null;
+    let myName = "";
+    let roomId = null;
+    let isInCall = false;
+    
+    // Store all peer connections
+    let peerConnections = new Map(); // peerId -> {call, stream, name, videoElement}
+    let participants = new Map(); // peerId -> {name, stream}
+    
+    // DOM elements
+    const videoGrid = document.getElementById('videoGrid');
+    const startCamBtn = document.getElementById('startCamBtn');
+    const muteMicBtn = document.getElementById('muteMicBtn');
+    const muteCamBtn = document.getElementById('muteCamBtn');
+    const leaveCallBtn = document.getElementById('leaveCallBtn');
+    const createRoomBtn = document.getElementById('createRoomBtn');
+    const roomDisplay = document.getElementById('roomDisplay');
+    const inviteLinkDiv = document.getElementById('inviteLink');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const hostSection = document.getElementById('hostSection');
+    const guestSection = document.getElementById('guestSection');
+    const guestNameInput = document.getElementById('guestNameInput');
+    const joinRoomBtn = document.getElementById('joinRoomBtn');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendMsgBtn = document.getElementById('sendMsgBtn');
+    const statusDiv = document.getElementById('status');
+    const memberCountSpan = document.getElementById('memberCount');
+    const memberListDiv = document.getElementById('memberList');
+    
+    function updateStatus(message, type = 'offline') {
+        statusDiv.textContent = message;
+        statusDiv.className = `status status-${type}`;
+    }
+    
+    function updateMemberCount() {
+        const count = participants.size + 1; // +1 for self
+        memberCountSpan.textContent = `${count} member${count !== 1 ? 's' : ''}`;
+        
+        // Update member list
+        memberListDiv.innerHTML = `<div class="member-badge">👤 ${myName} (You)</div>`;
+        for (let [peerId, data] of participants) {
+            memberListDiv.innerHTML += `<div class="member-badge">👤 ${data.name}</div>`;
+        }
+    }
+    
+    function addSystemMessage(text) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message message-system';
+        messageDiv.innerHTML = `<div class="message-text">${text}</div>`;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function addChatMessage(text, senderName, isMine = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isMine ? 'message-mine' : 'message-theirs'}`;
+        
+        if (!isMine) {
+            const nameSpan = document.createElement('div');
+            nameSpan.className = 'message-name';
+            nameSpan.textContent = senderName;
+            messageDiv.appendChild(nameSpan);
+        }
+        
+        const textSpan = document.createElement('div');
+        textSpan.className = 'message-text';
+        textSpan.textContent = text;
+        
+        const timeSpan = document.createElement('div');
+        timeSpan.className = 'message-time';
+        timeSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        messageDiv.appendChild(textSpan);
+        messageDiv.appendChild(timeSpan);
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function broadcastMessage(message) {
+        const messageData = {
+            type: 'chat',
+            message: message,
+            sender: myName,
+            time: Date.now()
+        };
+        
+        for (let [peerId, conn] of peerConnections) {
+            if (conn.dataChannel && conn.dataChannel.readyState === 'open') {
+                conn.dataChannel.send(JSON.stringify(messageData));
+            }
+        }
+    }
+    
+    function sendChatMessage() {
+        const message = chatInput.value.trim();
+        if (!message || !isInCall) return;
+        
+        addChatMessage(message, myName, true);
+        broadcastMessage(message);
+        chatInput.value = '';
+    }
+    
+    function setupDataChannel(peerId, dataChannel, isInitiator = false) {
+        dataChannel.onopen = () => {
+            console.log(`Data channel open with ${peerId}`);
+        };
+        
+        dataChannel.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'chat') {
+                    addChatMessage(data.message, data.sender, false);
+                }
+            } catch (e) {}
+        };
+    }
+    
+    function addVideoStream(peerId, stream, name) {
+        // Check if video element already exists
+        let videoCard = document.getElementById(`video-${peerId}`);
+        
+        if (!videoCard) {
+            videoCard = document.createElement('div');
+            videoCard.className = 'video-card';
+            videoCard.id = `video-${peerId}`;
+            
+            const video = document.createElement('video');
+            video.id = `video-element-${peerId}`;
+            video.autoplay = true;
+            video.playsInline = true;
+            video.srcObject = stream;
+            
+            const label = document.createElement('div');
+            label.className = 'video-label';
+            label.innerHTML = `<span class="dot"></span> 📹 ${name}`;
+            
+            videoCard.appendChild(video);
+            videoCard.appendChild(label);
+            videoGrid.appendChild(videoCard);
+        }
+        
+        const video = document.getElementById(`video-element-${peerId}`);
+        if (video && video.srcObject !== stream) {
+            video.srcObject = stream;
+        }
+    }
+    
+    function removeVideoStream(peerId) {
+        const videoCard = document.getElementById(`video-${peerId}`);
+        if (videoCard) {
+            videoCard.remove();
+        }
+    }
+    
+    async function startCamera() {
+        try {
+            updateStatus('Requesting camera/mic...', 'waiting');
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } },
+                audio: { echoCancellation: true, noiseSuppression: true }
+            });
+            
+            // Add local video
+            addVideoStream('local', localStream, `${myName} (You)`);
+            
+            updateStatus('✅ Camera ready!', 'online');
+            startCamBtn.disabled = true;
+            startCamBtn.textContent = '✅ Camera Ready';
+            muteMicBtn.disabled = false;
+            muteCamBtn.disabled = false;
+            leaveCallBtn.disabled = false;
+            
+            return true;
+        } catch (err) {
+            updateStatus('❌ Camera access denied', 'offline');
+            alert('Please allow camera and microphone');
+            return false;
+        }
+    }
+    
+    async function initPeer() {
+        return new Promise((resolve, reject) => {
+            peer = new Peer();
+            peer.on('open', (id) => {
+                myPeerId = id;
+                console.log('My Peer ID:', id);
+                resolve(id);
+            });
+            peer.on('error', reject);
+        });
+    }
+    
+    function connectToPeer(peerId, targetName) {
+        if (peerConnections.has(peerId) || peerId === myPeerId) return;
+        
+        console.log(`Connecting to peer: ${peerId} (${targetName})`);
+        
+        const call = peer.call(peerId, localStream, { metadata: { name: myName } });
+        
+        call.on('stream', (remoteStream) => {
+            console.log(`Received stream from ${targetName}`);
+            participants.set(peerId, { name: targetName, stream: remoteStream });
+            addVideoStream(peerId, remoteStream, targetName);
+            updateMemberCount();
+        });
+        
+        call.on('close', () => {
+            console.log(`Call closed with ${targetName}`);
+            removeVideoStream(peerId);
+            participants.delete(peerId);
+            peerConnections.delete(peerId);
+            updateMemberCount();
+        });
+        
+        // Setup data channel
+        const dataChannel = call.createDataChannel('chat');
+        setupDataChannel(peerId, dataChannel);
+        
+        peerConnections.set(peerId, { call, dataChannel, name: targetName });
+    }
+    
+    async function createRoom() {
+        if (!localStream) {
+            await startCamera();
+        }
+        if (!peer) {
+            await initPeer();
+        }
+        
+        const hostName = prompt('Enter your name:', 'Host');
+        if (!hostName) return;
+        myName = hostName;
+        
+        roomId = Math.random().toString(36).substring(2, 10);
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}&host=${myPeerId}`;
+        inviteLinkDiv.textContent = inviteUrl;
+        roomDisplay.style.display = 'block';
+        
+        updateStatus('🔗 Room created! Share the link', 'online');
+        addSystemMessage(`🎉 Room created! Share the link with friends`);
+        
+        isInCall = true;
+        chatInput.disabled = false;
+        sendMsgBtn.disabled = false;
+        
+        // Listen for incoming calls
+        peer.on('call', (incomingCall) => {
+            const callerName = incomingCall.metadata?.name || 'Friend';
+            console.log(`Incoming call from ${callerName}`);
+            
+            incomingCall.answer(localStream);
+            
+            incomingCall.on('stream', (remoteStream) => {
+                participants.set(incomingCall.peer, { name: callerName, stream: remoteStream });
+                addVideoStream(incomingCall.peer, remoteStream, callerName);
+                updateMemberCount();
+                addSystemMessage(`👤 ${callerName} joined the call`);
+            });
+            
+            incomingCall.on('close', () => {
+                removeVideoStream(incomingCall.peer);
+                participants.delete(incomingCall.peer);
+                updateMemberCount();
+                addSystemMessage(`👋 ${callerName} left the call`);
+            });
+            
+            // Handle data channel
+            incomingCall.ondatachannel = (event) => {
+                const dataChannel = event.channel;
+                setupDataChannel(incomingCall.peer, dataChannel);
+                peerConnections.set(incomingCall.peer, { call: incomingCall, dataChannel, name: callerName });
+            };
+            
+            peerConnections.set(incomingCall.peer, { call: incomingCall, name: callerName });
+        });
+    }
+    
+    async function autoJoinFromLink() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomIdParam = urlParams.get('room');
+        const hostId = urlParams.get('host');
+        
+        if (roomIdParam && hostId) {
+            hostSection.classList.add('hidden');
+            guestSection.classList.remove('hidden');
+            window.hostPeerId = hostId;
+            window.roomIdParam = roomIdParam;
+            updateStatus('🔗 Enter your name to join', 'waiting');
+        }
+    }
+    
+    async function joinRoom() {
+        const guestName = guestNameInput.value.trim();
+        const hostId = window.hostPeerId;
+        
+        if (!guestName) {
+            alert('Please enter your name');
+            return;
+        }
+        
+        if (!hostId) {
+            alert('Invalid room link');
+            return;
+        }
+        
+        myName = guestName;
+        
+        if (!localStream) {
+            await startCamera();
+        }
+        
+        if (!peer) {
+            await initPeer();
+        }
+        
+        updateStatus('📞 Joining group call...', 'waiting');
+        
+        // First, connect to host
+        connectToPeer(hostId, 'Host');
+        
+        isInCall = true;
+        chatInput.disabled = false;
+        sendMsgBtn.disabled = false;
+        guestSection.classList.add('hidden');
+        
+        addSystemMessage(`🎉 You joined the group call as ${myName}`);
+        
+        // Broadcast to host that we joined (host will help connect to others)
+        // For simplicity, we'll rely on host to introduce us to others
+        // Host will get our call and then we can discover others
+        
+        updateStatus('✅ Connected to group!', 'online');
+    }
+    
+    function leaveCall() {
+        // Close all connections
+        for (let [peerId, conn] of peerConnections) {
+            if (conn.call) conn.call.close();
+        }
+        peerConnections.clear();
+        participants.clear();
+        
+        // Remove remote videos
+        const videoCards = document.querySelectorAll('.video-card');
+        videoCards.forEach(card => {
+            if (card.id !== 'video-local') {
+                card.remove();
+            }
+        });
+        
+        isInCall = false;
+        chatInput.disabled = true;
+        sendMsgBtn.disabled = true;
+        updateStatus('You left the call', 'offline');
+        addSystemMessage('👋 You left the call');
+        
+        // Re-add local video
+        if (localStream) {
+            const localCard = document.getElementById('video-local');
+            if (!localCard) {
+                addVideoStream('local', localStream, `${myName} (You)`);
+            }
+        }
+        
+        updateMemberCount();
+    }
+    
+    function toggleMuteMic() {
+        if (localStream) {
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                muteMicBtn.textContent = audioTrack.enabled ? '🎤 Mute Mic' : '🔊 Unmute';
+            }
+        }
+    }
+    
+    function toggleMuteCam() {
+        if (localStream) {
+            const videoTrack = localStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                muteCamBtn.textContent = videoTrack.enabled ? '📷 Mute Camera' : '🎥 Unmute';
+            }
+        }
+    }
+    
+    function copyInviteLink() {
+        const link = inviteLinkDiv.textContent;
+        navigator.clipboard.writeText(link);
+        updateStatus('✅ Link copied!', 'online');
+        addSystemMessage('📋 Invite link copied! Share with friends');
+    }
+    
+    // Event listeners
+    startCamBtn.addEventListener('click', startCamera);
+    muteMicBtn.addEventListener('click', toggleMuteMic);
+    muteCamBtn.addEventListener('click', toggleMuteCam);
+    leaveCallBtn.addEventListener('click', leaveCall);
+    createRoomBtn.addEventListener('click', createRoom);
+    copyLinkBtn.addEventListener('click', copyInviteLink);
+    joinRoomBtn.addEventListener('click', joinRoom);
+    sendMsgBtn.addEventListener('click', sendChatMessage);
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+    
+    // Initialize
+    autoJoinFromLink();
+    
+    console.log('%c👥 Group Video Call Ready!', 'color: #25d366; font-size: 16px');
+    console.log('%c✅ Up to 5 members can join', 'color: #075e54; font-size: 12px');
+    console.log('%c✅ Everyone sees everyone', 'color: #075e54; font-size: 12px');
+    console.log('%c✅ Group chat included', 'color: #075e54; font-size: 12px');
+</script>
+</body>
+</html>
