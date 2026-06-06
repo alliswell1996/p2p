@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>EasyCall Pro - Video Call with Chat</title>
+    <title>One-Click Video Call - Just Enter Name!</title>
     <style>
         * {
             margin: 0;
@@ -41,7 +41,6 @@
             font-size: 0.9rem;
         }
         
-        /* Video grid with chat */
         .main-layout {
             display: flex;
             gap: 16px;
@@ -120,7 +119,6 @@
             50% { opacity: 0.5; transform: scale(1.2); }
         }
         
-        /* Chat styles */
         .chat-header {
             padding: 12px;
             background: #075e54;
@@ -205,7 +203,6 @@
             font-weight: 600;
         }
         
-        /* Controls */
         .controls {
             display: flex;
             gap: 12px;
@@ -257,40 +254,39 @@
         .status-waiting { background: #fff3cd; color: #856404; }
         .status-calling { background: #d1ecf1; color: #0c5460; }
         
-        .room-box {
+        .create-card {
             background: #f7fafc;
             border-radius: 16px;
             padding: 20px;
             margin-top: 20px;
+            text-align: center;
         }
         
-        .room-code {
-            font-size: 2rem;
-            font-weight: bold;
-            font-family: monospace;
+        .invite-link {
             background: white;
-            padding: 12px;
+            padding: 15px;
             border-radius: 12px;
-            margin: 10px 0;
-            text-align: center;
-            letter-spacing: 8px;
-            border: 2px solid #25d366;
-        }
-        
-        .short-peer-id {
-            font-family: monospace;
-            font-size: 1.2rem;
-            font-weight: bold;
-            background: #e8f5e9;
-            padding: 8px;
-            border-radius: 8px;
-            text-align: center;
-            margin-top: 10px;
+            margin: 15px 0;
             word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            border: 2px solid #25d366;
             cursor: pointer;
         }
         
-        input {
+        .invite-link:hover {
+            background: #f0f0f0;
+        }
+        
+        .join-panel {
+            background: #e8f5e9;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .name-input {
             padding: 12px;
             font-size: 16px;
             border: 2px solid #e2e8f0;
@@ -298,63 +294,7 @@
             width: 100%;
             max-width: 300px;
             text-align: center;
-            font-size: 1rem;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #25d366;
-        }
-        
-        .flex-row {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-        
-        .card {
-            flex: 1;
-            min-width: 280px;
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .card h4 {
-            margin-bottom: 15px;
-            color: #075e54;
-            font-size: 1.1rem;
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                padding: 8px;
-            }
-            
-            .container {
-                padding: 12px;
-            }
-            
-            .main-layout {
-                flex-direction: column;
-            }
-            
-            .chat-section {
-                height: 350px;
-            }
-            
-            button {
-                padding: 10px 16px;
-                font-size: 12px;
-            }
-            
-            .room-code {
-                font-size: 1.3rem;
-                letter-spacing: 4px;
-            }
+            margin: 10px auto;
         }
         
         .pip-hint {
@@ -368,21 +308,40 @@
             font-size: 11px;
             cursor: pointer;
             z-index: 10;
-            backdrop-filter: blur(4px);
         }
         
-        .copy-icon {
-            cursor: pointer;
-            margin-left: 8px;
-            font-size: 14px;
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            .chat-section {
+                height: 350px;
+            }
+            .invite-link {
+                font-size: 11px;
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #25d366;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
         }
     </style>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <h1>🎥 EasyCall Pro</h1>
-    <div class="subtitle">Video chat + Messaging | Camera stays on even when minimized</div>
+    <h1>🎥 One-Click Video Call</h1>
+    <div class="subtitle">Share a link - others join with just their name!</div>
     
     <div class="main-layout">
         <div class="video-section">
@@ -424,7 +383,7 @@
             </div>
             <div class="chat-messages" id="chatMessages">
                 <div class="message message-theirs">
-                    <div class="message-text">💡 Send messages while on call!</div>
+                    <div class="message-text">💡 Click the invite link below to share!</div>
                 </div>
             </div>
             <div class="chat-input-area">
@@ -436,32 +395,29 @@
     
     <div id="status" class="status status-offline">⚡ Click "Start Camera" to begin</div>
     
-    <div class="room-box">
-        <div class="flex-row">
-            <div class="card">
-                <h4>🏠 Start a Call (Host)</h4>
-                <button id="createRoomBtn" class="btn-success" style="width: 100%;">Create Call Room</button>
-                <div id="roomDisplay" style="display: none; margin-top: 15px;">
-                    <p>📢 Share these with your friend:</p>
-                    <div class="room-code" id="roomCode"></div>
-                    <div class="short-peer-id" id="shortPeerId">
-                        <span id="peerIdText"></span>
-                        <span class="copy-icon" onclick="copyPeerId()">📋</span>
-                    </div>
-                    <p style="font-size: 12px; margin-top: 8px; color: #666;">Click the Peer ID to copy it easily</p>
-                </div>
+    <!-- Host Section -->
+    <div id="hostSection" class="create-card">
+        <h3>🏠 Create Your Call Link</h3>
+        <p style="margin: 10px 0;">Share this link - anyone who clicks it will join your call automatically!</p>
+        <button id="createLinkBtn" class="btn-success">🔗 Generate Invite Link</button>
+        <div id="linkDisplay" style="display: none; margin-top: 20px;">
+            <p>📢 Your invite link (share this):</p>
+            <div class="invite-link" id="inviteLink" onclick="copyInviteLink()">
+                Loading...
             </div>
-            
-            <div class="card">
-                <h4>🔗 Join a Call (Guest)</h4>
-                <div class="join-form">
-                    <input type="text" id="guestName" placeholder="Enter your name" maxlength="20">
-                    <input type="text" id="joinCode" placeholder="Enter 6-digit room code" maxlength="6">
-                    <input type="text" id="hostPeerId" placeholder="Paste host's Peer ID" style="font-size: 12px;">
-                    <button id="joinRoomBtn" class="btn-success" style="width: 100%;">Join Call</button>
-                </div>
-            </div>
+            <button id="copyLinkBtn" class="btn-primary">📋 Copy Link</button>
+            <p style="font-size: 12px; margin-top: 10px; color: #666;">
+                ✅ Anyone with this link will connect directly to you!
+            </p>
         </div>
+    </div>
+    
+    <!-- Guest Join Section (shown when someone joins via link) -->
+    <div id="guestSection" class="join-panel hidden">
+        <h3>🔗 Join Call</h3>
+        <p>You've been invited to a video call!</p>
+        <input type="text" id="guestNameInput" class="name-input" placeholder="Enter your name" maxlength="20">
+        <button id="joinWithLinkBtn" class="btn-success">🎥 Join Call</button>
     </div>
 </div>
 
@@ -470,12 +426,13 @@
     let peer = null;
     let currentCall = null;
     let myPeerId = null;
-    let currentRoomCode = null;
     let myName = "You";
     let remoteName = "Friend";
     let dataConnection = null;
     let isCallActive = false;
+    let expectedCallerId = null; // Store who we expect to call us
     
+    // DOM elements
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
     const statusDiv = document.getElementById('status');
@@ -485,34 +442,26 @@
     const muteMicBtn = document.getElementById('muteMicBtn');
     const muteCamBtn = document.getElementById('muteCamBtn');
     const hangupBtn = document.getElementById('hangupBtn');
-    const createRoomBtn = document.getElementById('createRoomBtn');
-    const joinRoomBtn = document.getElementById('joinRoomBtn');
-    const roomDisplay = document.getElementById('roomDisplay');
-    const roomCodeSpan = document.getElementById('roomCode');
-    const joinCodeInput = document.getElementById('joinCode');
-    const guestNameInput = document.getElementById('guestName');
-    const hostPeerIdInput = document.getElementById('hostPeerId');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const remoteDot = document.getElementById('remoteDot');
-    const shortPeerIdSpan = document.getElementById('shortPeerId');
-    const peerIdTextSpan = document.getElementById('peerIdText');
+    const createLinkBtn = document.getElementById('createLinkBtn');
+    const linkDisplay = document.getElementById('linkDisplay');
+    const inviteLinkDiv = document.getElementById('inviteLink');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const hostSection = document.getElementById('hostSection');
+    const guestSection = document.getElementById('guestSection');
+    const guestNameInput = document.getElementById('guestNameInput');
+    const joinWithLinkBtn = document.getElementById('joinWithLinkBtn');
     const chatMessages = document.getElementById('chatMessages');
     const chatInput = document.getElementById('chatInput');
     const sendMsgBtn = document.getElementById('sendMsgBtn');
+    const remoteDot = document.getElementById('remoteDot');
     
-    // Shorten Peer ID to first 8 chars + last 4
-    function shortenPeerId(id) {
-        if (!id) return '';
-        if (id.length <= 12) return id;
-        return id.substring(0, 8) + '...' + id.substring(id.length - 4);
-    }
-    
+    // Helper functions
     function updateStatus(message, type = 'offline') {
         statusDiv.textContent = message;
         statusDiv.className = `status status-${type}`;
     }
     
-    // Add message to chat
     function addMessage(text, isMine = false, senderName = '') {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isMine ? 'message-mine' : 'message-theirs'}`;
@@ -537,64 +486,43 @@
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
     
-    // Send chat message
     function sendChatMessage() {
         const message = chatInput.value.trim();
         if (!message || !dataConnection || dataConnection.open === false) {
-            if (!dataConnection) addMessage('⚠️ Not connected to anyone yet', false, 'System');
+            addMessage('⚠️ Not connected to anyone yet', false, 'System');
             return;
         }
-        
-        dataConnection.send({
-            type: 'chat',
-            message: message,
-            sender: myName
-        });
-        
+        dataConnection.send({ type: 'chat', message: message, sender: myName });
         addMessage(message, true);
         chatInput.value = '';
     }
     
-    // Setup data channel for chat
     function setupDataChannel(conn) {
         dataConnection = conn;
-        
         dataConnection.on('open', () => {
-            console.log('Data connection opened');
             chatInput.disabled = false;
             sendMsgBtn.disabled = false;
-            addMessage('💬 Chat ready! You can now send messages', false, 'System');
+            addMessage('💬 Chat ready!', false, 'System');
         });
-        
         dataConnection.on('data', (data) => {
-            if (data.type === 'chat') {
-                addMessage(data.message, false, data.sender);
-            }
+            if (data.type === 'chat') addMessage(data.message, false, data.sender);
         });
-        
         dataConnection.on('close', () => {
-            console.log('Data connection closed');
             chatInput.disabled = true;
             sendMsgBtn.disabled = true;
         });
     }
     
-    // Picture-in-Picture
     window.togglePictureInPicture = async (videoId) => {
         const video = document.getElementById(videoId);
-        if (!video.srcObject) {
-            updateStatus('No video stream', 'waiting');
-            return;
-        }
+        if (!video.srcObject) return;
         try {
             if (document.pictureInPictureElement) {
                 await document.exitPictureInPicture();
             } else {
                 await video.requestPictureInPicture();
             }
-        } catch (err) {
-            console.error('PiP error:', err);
-        }
+        } catch (err) {}
     };
     
     function toggleFullscreen() {
@@ -606,24 +534,16 @@
         }
     }
     
-    // Start camera - keeps running even when minimized
+    // Start camera
     async function startCamera() {
         try {
             updateStatus('Requesting camera/mic access...', 'waiting');
-            // Important: Use appropriate constraints to keep stream alive
             localStream = await navigator.mediaDevices.getUserMedia({ 
-                video: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    facingMode: 'user'
-                },
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true
-                }
+                video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: { echoCancellation: true, noiseSuppression: true }
             });
             localVideo.srcObject = localStream;
-            updateStatus('✅ Camera ready! Camera stays on even if minimized', 'online');
+            updateStatus('✅ Camera ready!', 'online');
             startCamBtn.disabled = true;
             startCamBtn.textContent = '✅ Camera Ready';
             muteMicBtn.disabled = false;
@@ -631,73 +551,54 @@
             hangupBtn.disabled = false;
             return true;
         } catch (err) {
-            console.error(err);
             updateStatus('❌ Camera/Mic access denied', 'offline');
             alert('Please allow camera and microphone');
             return false;
         }
     }
     
-    // Initialize Peer with simplified ID display
+    // Initialize Peer
     async function initPeer() {
         return new Promise((resolve, reject) => {
             peer = new Peer();
-            
             peer.on('open', (id) => {
                 myPeerId = id;
-                const shortId = shortenPeerId(id);
-                peerIdTextSpan.textContent = shortId;
-                shortPeerIdSpan.title = id; // Show full ID on hover
-                console.log('Full Peer ID:', id);
-                console.log('Shortened Peer ID:', shortId);
-                updateStatus('✅ Ready! Create or join a call', 'online');
+                console.log('My Peer ID:', id);
+                updateStatus('✅ Ready!', 'online');
                 resolve(id);
             });
-            
             peer.on('error', (err) => {
                 console.error('Peer error:', err);
                 updateStatus('Connection error. Refresh page.', 'offline');
                 reject(err);
             });
-            
             peer.on('call', (incomingCall) => {
                 if (!localStream) {
                     updateStatus('Start camera first', 'offline');
                     incomingCall.close();
                     return;
                 }
-                
                 const callerName = incomingCall.metadata?.name || 'Friend';
                 remoteName = callerName;
                 remoteNameLabel.textContent = remoteName;
-                
                 updateStatus(`📞 Incoming call from ${remoteName}!`, 'calling');
                 currentCall = incomingCall;
                 currentCall.answer(localStream);
-                
-                // Setup data channel for chat
-                currentCall.on('connection', (dataConn) => {
-                    setupDataChannel(dataConn);
-                });
-                
+                currentCall.on('connection', (dataConn) => setupDataChannel(dataConn));
                 currentCall.on('stream', (remoteStream) => {
                     remoteVideo.srcObject = remoteStream;
                     remoteDot.style.background = '#48bb78';
                     isCallActive = true;
                     updateStatus(`🎥 Connected with ${remoteName}!`, 'online');
-                    addMessage(`🎥 Call connected with ${remoteName}`, false, 'System');
+                    addMessage(`🎥 Connected with ${remoteName}`, false, 'System');
                 });
-                
                 currentCall.on('close', () => {
                     remoteVideo.srcObject = null;
                     remoteDot.style.background = '#ffc107';
                     remoteNameLabel.textContent = 'Disconnected';
                     isCallActive = false;
                     updateStatus('Call ended', 'online');
-                    if (dataConnection) {
-                        dataConnection.close();
-                        dataConnection = null;
-                    }
+                    if (dataConnection) dataConnection.close();
                     chatInput.disabled = true;
                     sendMsgBtn.disabled = true;
                 });
@@ -705,13 +606,12 @@
         });
     }
     
-    // Create a room
-    async function createRoom() {
+    // Create invite link (host)
+    async function createInviteLink() {
         if (!localStream) {
             const started = await startCamera();
             if (!started) return;
         }
-        
         if (!peer) {
             await initPeer();
         }
@@ -722,34 +622,50 @@
             myNameLabel.textContent = myName;
         }
         
-        currentRoomCode = Math.floor(100000 + Math.random() * 900000).toString();
-        roomCodeSpan.textContent = currentRoomCode;
-        roomDisplay.style.display = 'block';
-        updateStatus(`🏠 Room: ${currentRoomCode} - Share code & Peer ID`, 'online');
-        
-        // Show helpful message
-        setTimeout(() => {
-            addMessage(`📢 Your Peer ID: ${shortenPeerId(myPeerId)} (click to copy)`, false, 'System');
-        }, 500);
+        // Generate unique room ID
+        const roomId = Math.random().toString(36).substring(2, 10);
+        // Create link with peer ID and room ID
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(myPeerId)}&room=${roomId}`;
+        inviteLinkDiv.textContent = inviteUrl;
+        linkDisplay.style.display = 'block';
+        updateStatus('🔗 Link created! Share it with anyone', 'online');
+        addMessage(`📢 Your invite link is ready! Share it to start a call`, false, 'System');
     }
     
-    // Copy Peer ID to clipboard
-    window.copyPeerId = function() {
-        navigator.clipboard.writeText(myPeerId);
-        updateStatus('✅ Peer ID copied!', 'online');
-        addMessage('📋 Peer ID copied to clipboard', false, 'System');
-    };
+    function copyInviteLink() {
+        const link = inviteLinkDiv.textContent;
+        navigator.clipboard.writeText(link);
+        updateStatus('✅ Link copied to clipboard!', 'online');
+        addMessage('📋 Invite link copied! Share it with your friend', false, 'System');
+    }
     
-    // Join a room
-    async function joinRoom() {
-        const roomCode = joinCodeInput.value.trim();
-        const guestName = guestNameInput.value.trim();
-        const hostId = hostPeerIdInput.value.trim();
+    // Auto-join when page loads with ?join= parameter
+    async function autoJoinFromLink() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hostPeerId = urlParams.get('join');
+        const roomId = urlParams.get('room');
         
-        if (!roomCode) {
-            alert('Please enter the room code');
-            return;
+        if (hostPeerId && roomId) {
+            console.log('Auto-join mode detected! Host Peer ID:', hostPeerId);
+            // Hide host section, show guest section
+            hostSection.classList.add('hidden');
+            guestSection.classList.remove('hidden');
+            
+            // Auto-start camera
+            await startCamera();
+            await initPeer();
+            
+            // Store the host ID for joining
+            window.hostPeerIdToJoin = hostPeerId;
+            
+            updateStatus('🔗 Click "Join Call" after entering your name', 'waiting');
         }
+    }
+    
+    // Guest joins via link
+    async function joinViaLink() {
+        const guestName = guestNameInput.value.trim();
+        const hostId = window.hostPeerIdToJoin;
         
         if (!guestName) {
             alert('Please enter your name');
@@ -757,13 +673,12 @@
         }
         
         if (!hostId) {
-            alert('Please paste the host\'s Peer ID');
+            alert('Invalid invite link');
             return;
         }
         
         if (!localStream) {
-            const started = await startCamera();
-            if (!started) return;
+            await startCamera();
         }
         
         if (!peer) {
@@ -772,30 +687,14 @@
         
         myName = guestName;
         myNameLabel.textContent = myName;
-        remoteName = "Host";
-        remoteNameLabel.textContent = remoteName;
+        remoteNameLabel.textContent = 'Host';
         
-        updateStatus(`🔗 Connecting...`, 'calling');
-        makeCall(hostId, guestName);
-    }
-    
-    function makeCall(remotePeerId, callerName) {
-        if (!localStream || !peer) return;
+        updateStatus(`📞 Connecting to host...`, 'calling');
         
-        if (currentCall) {
-            currentCall.close();
-        }
+        // Call the host
+        const call = peer.call(hostId, localStream, { metadata: { name: guestName } });
         
-        updateStatus(`📞 Calling...`, 'calling');
-        
-        const call = peer.call(remotePeerId, localStream, {
-            metadata: { name: callerName }
-        });
-        
-        // Setup data channel for chat
-        call.on('connection', (dataConn) => {
-            setupDataChannel(dataConn);
-        });
+        call.on('connection', (dataConn) => setupDataChannel(dataConn));
         
         call.on('stream', (remoteStream) => {
             remoteVideo.srcObject = remoteStream;
@@ -808,24 +707,23 @@
         call.on('close', () => {
             remoteVideo.srcObject = null;
             remoteDot.style.background = '#ffc107';
-            remoteNameLabel.textContent = 'Disconnected';
             isCallActive = false;
             updateStatus('Call ended', 'online');
-            if (dataConnection) {
-                dataConnection.close();
-                dataConnection = null;
-            }
+            if (dataConnection) dataConnection.close();
             chatInput.disabled = true;
             sendMsgBtn.disabled = true;
         });
         
         call.on('error', (err) => {
             console.error('Call error:', err);
-            updateStatus('Failed to connect', 'offline');
-            alert('Connection failed. Check Peer ID and try again.');
+            updateStatus('Failed to connect. Make sure host is online.', 'offline');
+            alert('Could not connect. Make sure the host has started their camera and created a link.');
         });
         
         currentCall = call;
+        
+        // Hide guest section after joining
+        guestSection.classList.add('hidden');
     }
     
     function hangUp() {
@@ -873,20 +771,19 @@
     muteMicBtn.addEventListener('click', toggleMuteMic);
     muteCamBtn.addEventListener('click', toggleMuteCam);
     hangupBtn.addEventListener('click', hangUp);
-    createRoomBtn.addEventListener('click', createRoom);
-    joinRoomBtn.addEventListener('click', joinRoom);
     fullscreenBtn.addEventListener('click', toggleFullscreen);
+    createLinkBtn.addEventListener('click', createInviteLink);
+    copyLinkBtn.addEventListener('click', copyInviteLink);
+    joinWithLinkBtn.addEventListener('click', joinViaLink);
     sendMsgBtn.addEventListener('click', sendChatMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendChatMessage();
-    });
+    chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
     
     // Initialize
     initPeer().catch(console.error);
+    autoJoinFromLink();
     
-    console.log('%c🎥 EasyCall Pro Ready!', 'color: #25d366; font-size: 16px');
-    console.log('%c✅ Camera stays on when minimized', 'color: #075e54; font-size: 12px');
-    console.log('%c✅ Chat feature enabled', 'color: #075e54; font-size: 12px');
+    console.log('%c🎥 One-Click Video Call Ready!', 'color: #25d366; font-size: 16px');
+    console.log('%cShare the invite link - others join with just their name!', 'color: #075e54; font-size: 12px');
 </script>
 </body>
 </html>
