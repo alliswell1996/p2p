@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>EasyCall - Picture-in-Picture Ready Video Call</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 16px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        /* Flexible video grid that works at any size */
+        .videos {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .video-card {
+            flex: 1;
+            min-width: 250px;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        
+        video {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            background: #1a1a1a;
+            display: block;
+        }
+        
+        .label {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+        }
+        
+        .label .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #48bb78;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        /* Controls row - responsive */
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-danger { background: #f56565; color: white; }
+        .btn-warning { background: #ed8936; color: white; }
+        .btn-info { background: #4299e1; color: white; }
+        
+        .status {
+            padding: 12px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .status-online { background: #c6f6d5; color: #22543d; }
+        .status-offline { background: #fed7d7; color: #742a2a; }
+        .status-waiting { background: #feebc8; color: #7c2d12; }
+        .status-calling { background: #bee3f8; color: #2c5282; }
+        
+        .room-box {
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .room-code {
+            font-size: 2rem;
+            font-weight: bold;
+            font-family: monospace;
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 10px 0;
+            text-align: center;
+            letter-spacing: 8px;
+        }
+        
+        input {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 250px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.2rem;
+        }
+        
+        .flex-row {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .card {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4a5568;
+        }
+        
+        /* Picture-in-Picture mode support */
+        video::-webkit-media-controls {
+            z-index: 20;
+        }
+        
+        /* Mobile optimization */
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+            }
+            
+            .container {
+                padding: 12px;
+            }
+            
+            h1 {
+                font-size: 1.2rem;
+                margin-bottom: 12px;
+            }
+            
+            .videos {
+                gap: 12px;
+            }
+            
+            .video-card {
+                min-width: 200px;
+            }
+            
+            button {
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+            
+            .room-code {
+                font-size: 1.5rem;
+                letter-spacing: 4px;
+            }
+            
+            .label {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+        }
+        
+        /* Very small screens (like minimized windows) */
+        @media (max-width: 500px) {
+            .videos {
+                flex-direction: column;
+            }
+            
+            .video-card {
+                min-width: auto;
+            }
+            
+            .controls {
+                gap: 8px;
+            }
+            
+            button {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+        }
+        
+        /* Fullscreen optimization */
+        :-webkit-full-screen video {
+            aspect-ratio: auto;
+        }
+        
+        .pip-hint {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+        
+        .pip-hint:hover {
+            background: rgba(0,0,0,0.9);
+        }
+    </style>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>🎥 EasyCall - Always See Both Participants</h1>
+    
+    <div class="videos">
+        <div class="video-card">
+            <video id="localVideo" autoplay playsinline muted></video>
+            <div class="label">
+                <span class="dot"></span>
+                📹 You
+            </div>
+            <div class="pip-hint" onclick="togglePictureInPicture('localVideo')">
+                🖼️ PiP
+            </div>
+        </div>
+        <div class="video-card">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <div class="label">
+                <span class="dot" id="remoteDot" style="background: #ed8936;"></span>
+                👤 Friend
+            </div>
+            <div class="pip-hint" onclick="togglePictureInPicture('remoteVideo')">
+                🖼️ PiP
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button id="startCamBtn" class="btn-primary">🎥 Start Camera</button>
+        <button id="muteMicBtn" class="btn-warning" disabled>🎤 Mute Mic</button>
+        <button id="muteCamBtn" class="btn-warning" disabled>📷 Mute Camera</button>
+        <button id="hangupBtn" class="btn-danger" disabled>❌ Hang Up</button>
+        <button id="fullscreenBtn" class="btn-info">🖥️ Fullscreen</button>
+    </div>
+    
+    <div id="status" class="status status-offline">⚡ Click "Start Camera" to begin</div>
+    
+    <div class="room-box">
+        <div class="flex-row">
+            <div class="card">
+                <h4>🏠 Create Room (You're the host)</h4>
+                <button id="createRoomBtn" class="btn-success" style="width: 100%;">Create New Room</button>
+                <div id="roomDisplay" style="display: none; margin-top: 15px;">
+                    <p>📢 Share this code:</p>
+                    <div class="room-code" id="roomCode"></div>
+                    <button id="copyCodeBtn" class="btn-primary" style="width: 100%; margin-top: 8px;">📋 Copy Code</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h4>🔗 Join Room (You're the guest)</h4>
+                <input type="text" id="joinCode" placeholder="Enter 6-digit code" maxlength="6">
+                <button id="joinRoomBtn" class="btn-success" style="width: 100%; margin-top: 10px;">Join Room</button>
+                <p style="font-size: 12px; color: #718096; margin-top: 10px; text-align: center;">
+                    Host will give you their Peer ID after joining
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let localStream = null;
+    let peer = null;
+    let currentCall = null;
+    let myPeerId = null;
+    let currentRoomCode = null;
+    
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const statusDiv = document.getElementById('status');
+    const startCamBtn = document.getElementById('startCamBtn');
+    const muteMicBtn = document.getElementById('muteMicBtn');
+    const muteCamBtn = document.getElementById('muteCamBtn');
+    const hangupBtn = document.getElementById('hangupBtn');
+    const createRoomBtn = document.getElementById('createRoomBtn');
+    const joinRoomBtn = document.getElementById('joinRoomBtn');
+    const roomDisplay = document.getElementById('roomDisplay');
+    const roomCodeSpan = document.getElementById('roomCode');
+    const copyCodeBtn = document.getElementById('copyCodeBtn');
+    const joinCodeInput = document.getElementById('joinCode');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const remoteDot = document.getElementById('remoteDot');
+    
+    function updateStatus(message, type = 'offline') {
+        statusDiv.textContent = message;
+        statusDiv.className = `status status-${type}`;
+    }
+    
+    // Picture-in-Picture support
+    window.togglePictureInPicture = async (videoId) => {
+        const video = document.getElementById(videoId);
+        if (!video.srcObject) {
+            updateStatus('No video stream to put in PiP', 'waiting');
+            return;
+        }
+        
+        try {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+            } else {
+                await video.requestPictureInPicture();
+            }
+        } catch (err) {
+            console.error('PiP error:', err);
+            updateStatus('PiP not supported in this browser', 'waiting');
+        }
+    };
+    
+    // Fullscreen
+    function toggleFullscreen() {
+        const container = document.querySelector('.container');
+        if (!document.fullscreenElement) {
+            container.requestFullscreen().catch(err => {
+                console.error('Fullscreen error:', err);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+    
+    // Start camera
+    async function startCamera() {
+        try {
+            updateStatus('Requesting camera/mic access...', 'waiting');
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: true 
+            });
+            localVideo.srcObject = localStream;
+            updateStatus('✅ Camera ready! Create or join a room', 'online');
+            startCamBtn.disabled = true;
+            startCamBtn.textContent = '✅ Camera Ready';
+            muteMicBtn.disabled = false;
+            muteCamBtn.disabled = false;
+            hangupBtn.disabled = false;
+            return true;
+        } catch (err) {
+            console.error(err);
+            updateStatus('❌ Camera/Mic access denied', 'offline');
+            alert('Please allow camera and microphone to make calls');
+            return false;
+        }
+    }
+    
+    // Initialize Peer
+    async function initPeer() {
+        return new Promise((resolve, reject) => {
+            peer = new Peer();
+            
+            peer.on('open', (id) => {
+                myPeerId = id;
+                console.log('📱 Your Peer ID:', myPeerId);
+                updateStatus('✅ Ready! Create a room or join with code', 'online');
+                resolve(id);
+            });
+            
+            peer.on('error', (err) => {
+                console.error('Peer error:', err);
+                updateStatus('Connection error. Refresh page.', 'offline');
+                reject(err);
+            });
+            
+            peer.on('call', (incomingCall) => {
+                if (!localStream) {
+                    updateStatus('Start camera first to answer call', 'offline');
+                    incomingCall.close();
+                    return;
+                }
+                
+                updateStatus('📞 Incoming call! Answering...', 'calling');
+                currentCall = incomingCall;
+                currentCall.answer(localStream);
+                
+                currentCall.on('stream', (remoteStream) => {
+                    remoteVideo.srcObject = remoteStream;
+                    remoteDot.style.background = '#48bb78';
+                    updateStatus('🎥 Connected! Both participants visible', 'online');
+                });
+                
+                currentCall.on('close', () => {
+                    remoteVideo.srcObject = null;
+                    remoteDot.style.background = '#ed8936';
+                    updateStatus('Call ended', 'online');
+                    currentCall = null;
+                });
+            });
+        });
+    }
+    
+    // Create a room
+    async function createRoom() {
+        if (!localStream) {
+            const started = await startCamera();
+            if (!started) return;
+        }
+        
+        if (!peer) {
+            await initPeer();
+        }
+        
+        currentRoomCode = Math.floor(100000 + Math.random() * 900000).toString();
+        roomCodeSpan.textContent = currentRoomCode;
+        roomDisplay.style.display = 'block';
+        updateStatus(`🏠 Room: ${currentRoomCode} - Share code & your Peer ID`, 'online');
+        
+        // Show Peer ID in console and alert
+        setTimeout(() => {
+            alert(`📱 Your Peer ID: ${myPeerId}\n\nShare this with your friend along with the room code ${currentRoomCode}`);
+        }, 500);
+    }
+    
+    // Join a room
+    async function joinRoom() {
+        const roomCode = joinCodeInput.value.trim();
+        if (!roomCode) {
+            alert('Please enter the room code');
+            return;
+        }
+        
+        if (!localStream) {
+            const started = await startCamera();
+            if (!started) return;
+        }
+        
+        if (!peer) {
+            await initPeer();
+        }
+        
+        updateStatus(`🔗 Connecting to room ${roomCode}...`, 'calling');
+        
+        // Ask for host's Peer ID
+        const friendPeerId = prompt(`Enter the host's Peer ID\n\nRoom code: ${roomCode}\n\n(Ask the host to share their Peer ID from the alert box or console)`);
+        
+        if (friendPeerId && peer) {
+            makeCall(friendPeerId);
+        } else {
+            updateStatus('Connection cancelled', 'offline');
+        }
+    }
+    
+    function makeCall(remotePeerId) {
+        if (!localStream || !peer) return;
+        
+        if (currentCall) {
+            currentCall.close();
+        }
+        
+        updateStatus('📞 Calling...', 'calling');
+        const call = peer.call(remotePeerId, localStream);
+        
+        call.on('stream', (remoteStream) => {
+            remoteVideo.srcObject = remoteStream;
+            remoteDot.style.background = '#48bb78';
+            updateStatus('🎥 Connected! Video call active', 'online');
+        });
+        
+        call.on('close', () => {
+            remoteVideo.srcObject = null;
+            remoteDot.style.background = '#ed8936';
+            updateStatus('Call ended', 'online');
+            currentCall = null;
+        });
+        
+        call.on('error', (err) => {
+            console.error('Call error:', err);
+            updateStatus('Failed to connect. Check Peer ID', 'offline');
+            alert('Connection failed. Make sure the Peer ID is correct and both have started camera.');
+        });
+        
+        currentCall = call;
+    }
+    
+    function hangUp() {
+        if (currentCall) {
+            currentCall.close();
+            currentCall = null;
+        }
+        remoteVideo.srcObject = null;
+        remoteDot.style.background = '#ed8936';
+        updateStatus('Call ended', 'online');
+    }
+    
+    function toggleMuteMic() {
+        if (localStream) {
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                muteMicBtn.textContent = audioTrack.enabled ? '🎤 Mute Mic' : '🔊 Unmute';
+                muteMicBtn.style.background = audioTrack.enabled ? '#ed8936' : '#48bb78';
+            }
+        }
+    }
+    
+    function toggleMuteCam() {
+        if (localStream) {
+            const videoTrack = localStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                muteCamBtn.textContent = videoTrack.enabled ? '📷 Mute Camera' : '🎥 Unmute';
+                muteCamBtn.style.background = videoTrack.enabled ? '#ed8936' : '#48bb78';
+            }
+        }
+    }
+    
+    function copyCode() {
+        navigator.clipboard.writeText(currentRoomCode);
+        updateStatus('✅ Room code copied!', 'online');
+        setTimeout(() => {
+            updateStatus(`Share code ${currentRoomCode} and your Peer ID: ${myPeerId?.substring(0, 8)}...`, 'online');
+        }, 2000);
+    }
+    
+    // Event listeners
+    startCamBtn.addEventListener('click', startCamera);
+    muteMicBtn.addEventListener('click', toggleMuteMic);
+    muteCamBtn.addEventListener('click', toggleMuteCam);
+    hangupBtn.addEventListener('click', hangUp);
+    createRoomBtn.addEventListener('click', createRoom);
+    joinRoomBtn.addEventListener('click', joinRoom);
+    copyCodeBtn.addEventListener('click', copyCode);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    
+    // Initialize peer on load
+    initPeer().catch(console.error);
+    
+    // Log helper for users
+    console.log('%c🎥 EasyCall Ready!', 'color: #48bb78; font-size: 16px');
+    console.log('%cTo get your Peer ID (for sharing): type "myPeerId" in console', 'color: #667eea; font-size: 12px');
+    
+    // Detect minimized window and adjust
+    window.addEventListener('resize', () => {
+        if (window.innerWidth < 500) {
+            console.log('Small window mode - videos stacked vertically');
+        }
+    });
+</script>
+</body>
+</html>
